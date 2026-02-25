@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Power BI Story Design Tokens */
+  --color-yellow: #F2C811;
+  --color-yellow-light: #FDF5C8;
+  --color-primary: #0078D4;
+  --color-primary-dark: #005a9e;
+  --color-primary-light: #EBF5FF;
+  --color-surface: #F5F5F5;
+  --color-surface-light: #ffffff;
+  --color-surface-lighter: #E8E8E8;
+  --color-accent: #F2C811;
+  --color-accent-light: #FDF5C8;
+  --color-text: #1a1a2e;
+  --color-text-muted: #6B7280;
+  --color-text-light: #9CA3AF;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+/* Dark theme overrides */
+html.dark {
+  --color-yellow: #F2C811;
+  --color-yellow-light: #3d3518;
+  --color-primary: #0078D4;
+  --color-primary-dark: #339af0;
+  --color-primary-light: #1a2a3e;
+  --color-surface: #1a1a2e;
+  --color-surface-light: #2d2d44;
+  --color-surface-lighter: #3d3d5c;
+  --color-accent: #F2C811;
+  --color-accent-light: #3d3518;
+  --color-text: #ffffff;
+  --color-text-muted: #9CA3AF;
+  --color-text-light: #6B7280;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+html.dark ::-webkit-scrollbar-thumb { background: #3d3d5c; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
+
+/* Left canvas panel takes 60%+ on desktop */
+@media (min-width: 1024px) {
+  main > *:first-child {
+    flex: 1 1 60%;
+    min-width: 60%;
+  }
+}
+
+/* Canvas needs full height */
+main {
+  height: calc(100vh - 60px);
+}
