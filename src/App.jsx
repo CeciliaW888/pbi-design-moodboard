@@ -10,7 +10,7 @@ import LivePreview from './components/LivePreview';
 import ExportPanel from './components/ExportPanel';
 import AuthModal from './components/AuthModal';
 import Header from './components/Header';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Palette, Settings, Eye, Download } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
 const DEFAULT_STATE = {
@@ -19,6 +19,7 @@ const DEFAULT_STATE = {
   fonts: { heading: 'Segoe UI Semibold', body: 'Segoe UI', titleSize: 18, bodySize: 10 },
   background: '#ffffff',
   formatRules: [],
+  sentinels: { good: '#107C10', neutral: '#F2C811', bad: '#D83B01' },
   name: 'My Dashboard Theme'
 };
 
@@ -126,6 +127,8 @@ export default function App() {
         ...prev,
         palette: deduplicateColors([...prev.palette, ...colors])
       }));
+    } catch (e) {
+      console.error('[App] analyzeScreenshot failed:', e);
     } finally {
       setAnalyzing(false);
     }
@@ -146,6 +149,32 @@ export default function App() {
     }));
   }, []);
 
+  const addColorManually = useCallback((hex) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const rn = r / 255, gn = g / 255, bn = b / 255;
+    const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
+      else if (max === gn) h = ((bn - rn) / d + 2) / 6;
+      else h = ((rn - gn) / d + 4) / 6;
+    }
+    const newColor = {
+      hex,
+      rgb: { r, g, b },
+      hsl: { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }
+    };
+    setState(prev => ({
+      ...prev,
+      palette: deduplicateColors([...prev.palette, newColor])
+    }));
+  }, []);
+
   const handleSaveToLibrary = async () => {
     if (!user) { setShowAuth(true); return; }
     try {
@@ -160,7 +189,8 @@ export default function App() {
     colors: state.palette,
     fonts: state.fonts,
     background: state.background,
-    formatRules: state.formatRules
+    formatRules: state.formatRules,
+    sentinels: state.sentinels
   };
 
   return (
@@ -191,17 +221,30 @@ export default function App() {
         {/* Right: Panel */}
         <div className="w-full lg:w-[400px] lg:min-w-[400px] border-l border-surface-lighter bg-surface-light flex flex-col">
           <div className="flex border-b border-surface-lighter">
-            {['palette', 'design', 'preview', 'export'].map(tab => (
+            {[
+              { id: 'palette', label: 'Palette', Icon: Palette, badge: state.palette.length || null },
+              { id: 'design',  label: 'Design',  Icon: Settings },
+              { id: 'preview', label: 'Preview', Icon: Eye },
+              { id: 'export',  label: 'Export',  Icon: Download },
+            ].map(({ id, label, Icon, badge }) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3 text-sm font-medium capitalize transition-colors ${
-                  activeTab === tab
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex-1 py-3 text-xs font-medium transition-colors flex flex-col items-center gap-0.5 ${
+                  activeTab === id
                     ? 'text-primary border-b-2 border-primary'
                     : 'text-text-muted hover:text-text'
                 }`}
               >
-                {tab === 'palette' ? `🎨 ${state.palette.length || ''}` : tab}
+                <div className="relative">
+                  <Icon size={15} />
+                  {badge != null && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[14px] h-[14px] bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+                      {badge}
+                    </span>
+                  )}
+                </div>
+                {label}
               </button>
             ))}
           </div>
@@ -211,6 +254,7 @@ export default function App() {
               <ColorPalette
                 colors={state.palette}
                 onRemove={removeColor}
+                onAdd={addColorManually}
                 analysis={analyzePalette(state.palette)}
               />
             )}
@@ -219,6 +263,7 @@ export default function App() {
                 fonts={state.fonts}
                 background={state.background}
                 formatRules={state.formatRules}
+                sentinels={state.sentinels}
                 onUpdate={update}
               />
             )}

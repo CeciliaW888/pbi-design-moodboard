@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" font-family="Inter, -apple-system, sans-serif">
+  <defs>
+    <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#d1d5db" opacity="0.5"/>
+    </pattern>
+    <clipPath id="roundedMain">
+      <rect x="0" y="0" width="1200" height="640" rx="12"/>
+    </clipPath>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,0,0,0.12)"/>
+    </filter>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="rgba(0,0,0,0.10)"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="640" fill="#F5F5F5" rx="12" clip-path="url(#roundedMain)"/>
+
+  <!-- ========== HEADER ========== -->
+  <rect x="0" y="0" width="1200" height="56" fill="#ffffff"/>
+  <line x1="0" y1="56" x2="1200" y2="56" stroke="#E8E8E8" stroke-width="1"/>
+
+  <!-- Logo mark -->
+  <rect x="16" y="14" width="28" height="28" rx="6" fill="#F2C811"/>
+  <text x="30" y="33" text-anchor="middle" font-size="14" font-weight="800" fill="#7a6200">P</text>
+
+  <!-- App name -->
+  <text x="52" y="33" font-size="14" font-weight="700" fill="#1a1a2e">PBI Design Moodboard</text>
+
+  <!-- Theme name pill -->
+  <rect x="440" y="15" width="320" height="26" rx="13" fill="#F5F5F5" stroke="#E8E8E8" stroke-width="1"/>
+  <text x="600" y="33" text-anchor="middle" font-size="13" font-weight="500" fill="#6B7280">My Dashboard Theme</text>
+
+  <!-- Right header actions -->
+  <!-- Dark mode toggle -->
+  <rect x="1060" y="17" width="42" height="22" rx="11" fill="#E8E8E8"/>
+  <circle cx="1094" cy="28" r="9" fill="#ffffff" filter="url(#cardShadow)"/>
+  <!-- Sign in button -->
+  <rect x="1114" y="14" width="72" height="28" rx="14" fill="#0078D4"/>
+  <text x="1150" y="33" text-anchor="middle" font-size="11" font-weight="600" fill="#ffffff">Sign In</text>
+
+  <!-- ========== CANVAS AREA (left) ========== -->
+  <rect x="0" y="56" width="790" height="584" fill="#F5F5F5"/>
+  <rect x="0" y="56" width="790" height="584" fill="url(#dots)"/>
+
+  <!-- Screenshot Card 1 (Power BI Dashboard) -->
+  <g filter="url(#cardShadow)">
+    <rect x="40" y="84" width="360" height="240" rx="10" fill="#ffffff"/>
+    <!-- Card header bar -->
+    <rect x="40" y="84" width="360" height="36" rx="10" fill="#0078D4"/>
+    <rect x="40" y="100" width="360" height="20" fill="#0078D4"/>
+    <text x="60" y="107" font-size="12" font-weight="600" fill="#ffffff">Sales Overview Dashboard</text>
+    <!-- Analyze button on hover -->
+    <rect x="358" y="88" width="30" height="18" rx="4" fill="rgba(255,255,255,0.2)"/>
+    <text x="373" y="101" text-anchor="middle" font-size="9" fill="#ffffff">✦</text>
+    <!-- KPI tiles row -->
+    <rect x="52" y="132" width="76" height="44" rx="6" fill="#EBF5FF"/>
+    <text x="90" y="150" text-anchor="middle" font-size="9" fill="#0078D4" font-weight="600">REVENUE</text>
+    <text x="90" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a2e">$2.4M</text>
+    <rect x="140" y="132" width="76" height="44" rx="6" fill="#FDF5C8"/>
+    <text x="178" y="150" text-anchor="middle" font-size="9" fill="#7a6200" font-weight="600">GROWTH</text>
+    <text x="178" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a2e">+18%</text>
+    <rect x="228" y="132" width="76" height="44" rx="6" fill="#EBF5FF"/>
+    <text x="266" y="150" text-anchor="middle" font-size="9" fill="#0078D4" font-weight="600">CUSTOMERS</text>
+    <text x="266" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a2e">8,342</text>
+    <rect x="316" y="132" width="72" height="44" rx="6" fill="#F5F5F5"/>
+    <text x="352" y="150" text-anchor="middle" font-size="9" fill="#6B7280" font-weight="600">MARGIN</text>
+    <text x="352" y="165" text-anchor="middle" font-size="14" font-weight="700" fill="#1a1a2e">34%</text>
+    <!-- Bar chart mock -->
+    <rect x="52" y="188" width="200" height="120" rx="6" fill="#F9F9F9"/>
+    <text x="62" y="202" font-size="8" fill="#6B7280">Monthly Revenue</text>
+    <!-- bars -->
+    <rect x="68" y="240" width="16" height="52" rx="2" fill="#0078D4" opacity="0.7"/>
+    <rect x="92" y="228" width="16" height="64" rx="2" fill="#0078D4" opacity="0.8"/>
+    <rect x="116" y="215" width="16" height="77" rx="2" fill="#0078D4"/>
+    <rect x="140" y="232" width="16" height="60" rx="2" fill="#0078D4" opacity="0.8"/>
+    <rect x="164" y="220" width="16" height="72" rx="2" fill="#F2C811"/>
+    <rect x="188" y="208" width="16" height="84" rx="2" fill="#0078D4" opacity="0.9"/>
+    <line x1="62" y1="292" x2="226" y2="292" stroke="#E8E8E8" stroke-width="1"/>
+    <!-- Donut chart mock -->
+    <circle cx="312" cy="248" r="42" fill="none" stroke="#0078D4" stroke-width="16" stroke-dasharray="100 163" stroke-dashoffset="0"/>
+    <circle cx="312" cy="248" r="42" fill="none" stroke="#F2C811" stroke-width="16" stroke-dasharray="60 203" stroke-dashoffset="-100"/>
+    <circle cx="312" cy="248" r="42" fill="none" stroke="#E8E8E8" stroke-width="16" stroke-dasharray="103 160" stroke-dashoffset="-160"/>
+    <text x="312" y="252" text-anchor="middle" font-size="10" font-weight="700" fill="#1a1a2e">63%</text>
+    <text x="312" y="263" text-anchor="middle" font-size="7" fill="#6B7280">target</text>
+  </g>
+
+  <!-- Screenshot Card 2 -->
+  <g filter="url(#cardShadow)">
+    <rect x="430" y="84" width="340" height="200" rx="10" fill="#ffffff"/>
+    <rect x="430" y="84" width="340" height="36" rx="10" fill="#1a1a2e"/>
+    <rect x="430" y="100" width="340" height="20" fill="#1a1a2e"/>
+    <text x="450" y="107" font-size="12" font-weight="600" fill="#F2C811">HR Analytics</text>
+    <!-- Line chart mock -->
+    <rect x="442" y="132" width="316" height="120" rx="6" fill="#F9F9F9"/>
+    <text x="452" y="146" font-size="8" fill="#6B7280">Headcount Trend</text>
+    <polyline points="452,228 484,215 516,220 548,200 580,195 612,188 644,178 676,170 708,162 740,155" fill="none" stroke="#0078D4" stroke-width="2.5" stroke-linejoin="round"/>
+    <polyline points="452,240 484,235 516,230 548,228 580,225 612,222 644,220 676,218 708,215 740,212" fill="none" stroke="#F2C811" stroke-width="2" stroke-linejoin="round" stroke-dasharray="4,2"/>
+    <line x1="452" y1="242" x2="748" y2="242" stroke="#E8E8E8" stroke-width="1"/>
+  </g>
+
+  <!-- Screenshot Card 3 (smaller, partially visible) -->
+  <g filter="url(#cardShadow)">
+    <rect x="40" y="344" width="280" height="180" rx="10" fill="#ffffff"/>
+    <rect x="40" y="344" width="280" height="36" rx="10" fill="#107C10"/>
+    <rect x="40" y="360" width="280" height="20" fill="#107C10"/>
+    <text x="60" y="383" font-size="12" font-weight="600" fill="#ffffff">Supply Chain</text>
+    <!-- Table mock -->
+    <rect x="52" y="392" width="256" height="16" rx="3" fill="#F5F5F5"/>
+    <rect x="52" y="413" width="256" height="16" rx="3" fill="#EBF5FF"/>
+    <rect x="52" y="434" width="256" height="16" rx="3" fill="#F5F5F5"/>
+    <rect x="52" y="455" width="256" height="16" rx="3" fill="#EBF5FF"/>
+    <text x="62" y="404" font-size="8" fill="#6B7280">EMEA</text>
+    <text x="200" y="404" font-size="8" fill="#107C10">↑ 12%</text>
+    <text x="62" y="425" font-size="8" fill="#1a1a2e">APAC</text>
+    <text x="200" y="425" font-size="8" fill="#0078D4">↑ 8%</text>
+    <text x="62" y="446" font-size="8" fill="#6B7280">AMER</text>
+    <text x="200" y="446" font-size="8" fill="#E53935">↓ 3%</text>
+    <text x="62" y="467" font-size="8" fill="#1a1a2e">MENA</text>
+    <text x="200" y="467" font-size="8" fill="#107C10">↑ 19%</text>
+  </g>
+
+  <!-- Analyze badge floating -->
+  <rect x="340" y="496" width="120" height="32" rx="16" fill="#1a1a2e" filter="url(#cardShadow)"/>
+  <text x="400" y="517" text-anchor="middle" font-size="11" font-weight="600" fill="#F2C811">✦ Analyze Colors</text>
+
+  <!-- ========== RIGHT PANEL ========== -->
+  <rect x="790" y="56" width="410" height="584" fill="#ffffff"/>
+  <line x1="790" y1="56" x2="790" y2="640" stroke="#E8E8E8" stroke-width="1"/>
+
+  <!-- Tabs -->
+  <rect x="790" y="56" width="410" height="48" fill="#ffffff"/>
+  <line x1="790" y1="104" x2="1200" y2="104" stroke="#E8E8E8" stroke-width="1"/>
+  <!-- Tab: palette -->
+  <text x="831" y="85" text-anchor="middle" font-size="12" font-weight="500" fill="#6B7280">🎨 6</text>
+  <!-- Tab: design (active) -->
+  <text x="934" y="85" text-anchor="middle" font-size="12" font-weight="600" fill="#0078D4">design</text>
+  <line x1="900" y1="104" x2="968" y2="104" stroke="#0078D4" stroke-width="2"/>
+  <!-- Tab: preview -->
+  <text x="1037" y="85" text-anchor="middle" font-size="12" font-weight="500" fill="#6B7280">preview</text>
+  <!-- Tab: export -->
+  <text x="1140" y="85" text-anchor="middle" font-size="12" font-weight="500" fill="#6B7280">export</text>
+
+  <!-- Design panel content -->
+  <!-- Typography section -->
+  <text x="806" y="132" font-size="11" font-weight="700" fill="#1a1a2e" letter-spacing="0.5">TYPOGRAPHY</text>
+  <!-- Heading font selector -->
+  <text x="806" y="156" font-size="11" fill="#6B7280">Heading font</text>
+  <rect x="806" y="162" width="378" height="36" rx="8" fill="#F5F5F5" stroke="#E8E8E8" stroke-width="1"/>
+  <text x="822" y="185" font-size="13" font-weight="600" fill="#1a1a2e">Segoe UI Semibold</text>
+  <text x="1170" y="185" text-anchor="middle" font-size="12" fill="#6B7280">⌄</text>
+  <!-- Body font -->
+  <text x="806" y="218" font-size="11" fill="#6B7280">Body font</text>
+  <rect x="806" y="224" width="378" height="36" rx="8" fill="#F5F5F5" stroke="#E8E8E8" stroke-width="1"/>
+  <text x="822" y="247" font-size="13" fill="#1a1a2e">Segoe UI</text>
+  <text x="1170" y="247" text-anchor="middle" font-size="12" fill="#6B7280">⌄</text>
+  <!-- Size sliders -->
+  <text x="806" y="280" font-size="11" fill="#6B7280">Title size — 18pt</text>
+  <rect x="806" y="288" width="378" height="4" rx="2" fill="#E8E8E8"/>
+  <rect x="806" y="288" width="200" height="4" rx="2" fill="#0078D4"/>
+  <circle cx="1006" cy="290" r="7" fill="#0078D4" filter="url(#cardShadow)"/>
+
+  <!-- Divider -->
+  <line x1="806" y1="316" x2="1184" y2="316" stroke="#E8E8E8" stroke-width="1"/>
+
+  <!-- Color palette section -->
+  <text x="806" y="340" font-size="11" font-weight="700" fill="#1a1a2e" letter-spacing="0.5">COLOR PALETTE</text>
+
+  <!-- Color swatches -->
+  <rect x="806" y="352" width="52" height="52" rx="8" fill="#0078D4"/>
+  <text x="832" y="420" text-anchor="middle" font-size="9" fill="#6B7280">#0078D4</text>
+  <rect x="868" y="352" width="52" height="52" rx="8" fill="#F2C811"/>
+  <text x="894" y="420" text-anchor="middle" font-size="9" fill="#6B7280">#F2C811</text>
+  <rect x="930" y="352" width="52" height="52" rx="8" fill="#1a1a2e"/>
+  <text x="956" y="420" text-anchor="middle" font-size="9" fill="#6B7280">#1A1A2E</text>
+  <rect x="992" y="352" width="52" height="52" rx="8" fill="#107C10"/>
+  <text x="1018" y="420" text-anchor="middle" font-size="9" fill="#6B7280">#107C10</text>
+  <rect x="1054" y="352" width="52" height="52" rx="8" fill="#E53935"/>
+  <text x="1080" y="420" text-anchor="middle" font-size="9" fill="#6B7280">#E53935</text>
+  <rect x="1116" y="352" width="52" height="52" rx="8" fill="#F5F5F5" stroke="#E8E8E8" stroke-width="1"/>
+  <text x="1142" y="372" text-anchor="middle" font-size="20" fill="#9CA3AF">+</text>
+  <text x="1142" y="420" text-anchor="middle" font-size="9" fill="#9CA3AF">Add</text>
+
+  <!-- Divider -->
+  <line x1="806" y1="434" x2="1184" y2="434" stroke="#E8E8E8" stroke-width="1"/>
+
+  <!-- Background section -->
+  <text x="806" y="458" font-size="11" font-weight="700" fill="#1a1a2e" letter-spacing="0.5">BACKGROUND</text>
+  <rect x="806" y="468" width="52" height="32" rx="6" fill="#ffffff" stroke="#E8E8E8" stroke-width="1"/>
+  <text x="868" y="489" font-size="12" fill="#1a1a2e">#FFFFFF — Canvas white</text>
+
+  <!-- Divider -->
+  <line x1="806" y1="514" x2="1184" y2="514" stroke="#E8E8E8" stroke-width="1"/>
+
+  <!-- Format Rules -->
+  <text x="806" y="538" font-size="11" font-weight="700" fill="#1a1a2e" letter-spacing="0.5">FORMAT RULES</text>
+  <rect x="806" y="548" width="378" height="28" rx="6" fill="#EBF5FF" stroke="#0078D4" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="995" y="567" text-anchor="middle" font-size="11" fill="#0078D4">+ Add rule (positive = green)</text>
+
+  <!-- Save to Library button -->
+  <rect x="806" y="592" width="378" height="36" rx="18" fill="#F2C811" filter="url(#cardShadow)"/>
+  <text x="995" y="615" text-anchor="middle" font-size="13" font-weight="700" fill="#7a6200">✦  Save to Library</text>
+
+  <!-- Border radius on overall card -->
+  <rect x="0" y="0" width="1200" height="640" rx="12" fill="none" stroke="#E8E8E8" stroke-width="1"/>
+</svg>

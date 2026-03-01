@@ -45,7 +45,7 @@ export default function LivePreview({ designSystem }) {
                   className="flex-1 rounded-t-sm transition-all"
                   style={{
                     height: `${h}%`,
-                    background: c(i % Math.min(colors.length, 3)),
+                    background: c(colors.length > 0 ? i % Math.min(colors.length, 3) : 0),
                     opacity: 0.8
                   }}
                 />
@@ -60,27 +60,31 @@ export default function LivePreview({ designSystem }) {
 
         {/* Donut + table */}
         <div className="grid grid-cols-2 gap-2 px-3 pb-3">
-          <div className="rounded-lg p-3 flex items-center justify-center" style={{ background: cardBg }}>
-            <svg width="60" height="60" viewBox="0 0 60 60">
-              {colors.slice(0, 4).map((color, i, arr) => {
-                const total = arr.length;
-                const angle = (360 / total) * i;
-                const endAngle = (360 / total) * (i + 1) - 4;
-                return (
-                  <circle
-                    key={i}
-                    cx="30" cy="30" r="22"
-                    fill="none"
-                    stroke={color.hex}
-                    strokeWidth="8"
-                    strokeDasharray={`${(endAngle - angle) * 0.38} 200`}
-                    strokeDashoffset={-angle * 0.38}
-                    strokeLinecap="round"
-                  />
-                );
-              })}
-              <text x="30" y="33" textAnchor="middle" fill={fg} fontSize="10" fontWeight="bold">68%</text>
-            </svg>
+          <div className="rounded-lg p-3 flex flex-col items-center justify-center gap-1" style={{ background: cardBg }}>
+            {colors.length >= 2 ? (
+              <div className="relative w-14 h-14">
+                <div
+                  className="w-14 h-14 rounded-full"
+                  style={{
+                    background: `conic-gradient(${
+                      colors.slice(0, 4).map((color, i, arr) => {
+                        const pct = 100 / arr.length;
+                        return `${color.hex} ${i * pct}% ${(i + 1) * pct}%`;
+                      }).join(', ')
+                    })`
+                  }}
+                />
+                <div
+                  className="absolute inset-0 m-auto w-7 h-7 rounded-full flex items-center justify-center"
+                  style={{ background: cardBg, fontSize: 8, fontWeight: 700, color: fg }}
+                >
+                  68%
+                </div>
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-full border-4 border-dashed" style={{ borderColor: fgMuted + '44' }} />
+            )}
+            <p style={{ fontSize: 8, color: fgMuted }}>Donut</p>
           </div>
           <div className="rounded-lg p-2" style={{ background: cardBg }}>
             {['Product A', 'Product B', 'Product C'].map((item, i) => (

@@ -1,4 +1,5 @@
-import { Type, Paintbrush, ListChecks } from 'lucide-react';
+import { useState } from 'react';
+import { Type, Paintbrush, ListChecks, Plus, X } from 'lucide-react';
 
 const PBI_FONTS = [
   'Segoe UI', 'Segoe UI Semibold', 'Segoe UI Light', 'Segoe UI Bold',
@@ -7,18 +8,25 @@ const PBI_FONTS = [
   'DIN', 'Poppins', 'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat'
 ];
 
-export default function DesignPanel({ fonts, background, formatRules, onUpdate }) {
+export default function DesignPanel({ fonts, background, formatRules, sentinels, onUpdate }) {
+  const [newRule, setNewRule] = useState('');
+
   const updateFont = (key, value) => {
     onUpdate({ fonts: { ...fonts, [key]: value } });
   };
 
   const addRule = () => {
-    const rule = prompt('Add a format rule (e.g., "All card titles 14pt bold")');
-    if (rule) onUpdate({ formatRules: [...formatRules, rule] });
+    if (!newRule.trim()) return;
+    onUpdate({ formatRules: [...formatRules, newRule.trim()] });
+    setNewRule('');
   };
 
   const removeRule = (index) => {
     onUpdate({ formatRules: formatRules.filter((_, i) => i !== index) });
+  };
+
+  const updateSentinel = (key, value) => {
+    onUpdate({ sentinels: { ...sentinels, [key]: value } });
   };
 
   return (
@@ -97,6 +105,40 @@ export default function DesignPanel({ fonts, background, formatRules, onUpdate }
         </div>
       </section>
 
+      {/* KPI Sentinel Colors */}
+      <section>
+        <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
+          <span className="flex gap-1">
+            <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
+            <span className="w-3 h-3 rounded-full bg-yellow-400 inline-block" />
+            <span className="w-3 h-3 rounded-full bg-red-500 inline-block" />
+          </span>
+          KPI Sentinel Colors
+        </h3>
+        <p className="text-xs text-text-muted mb-3">Used in KPI visuals and conditional formatting rules.</p>
+        <div className="space-y-2">
+          {[
+            { key: 'good', label: 'Good', defaultVal: '#107C10' },
+            { key: 'neutral', label: 'Neutral', defaultVal: '#F2C811' },
+            { key: 'bad', label: 'Bad / Alert', defaultVal: '#D83B01' },
+          ].map(({ key, label, defaultVal }) => {
+            const val = sentinels?.[key] || defaultVal;
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={val}
+                  onChange={e => updateSentinel(key, e.target.value)}
+                  className="w-8 h-8 rounded-lg border border-surface-lighter cursor-pointer"
+                />
+                <label className="text-sm text-text-muted flex-1">{label}</label>
+                <span className="text-xs font-mono text-text-light">{val.toUpperCase()}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Format Rules */}
       <section>
         <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -107,15 +149,28 @@ export default function DesignPanel({ fonts, background, formatRules, onUpdate }
           {formatRules.map((rule, i) => (
             <div key={i} className="flex items-center gap-2 text-sm bg-surface rounded-lg px-3 py-2">
               <span className="flex-1">{rule}</span>
-              <button onClick={() => removeRule(i)} className="text-text-muted hover:text-red-400 text-xs">✕</button>
+              <button onClick={() => removeRule(i)} className="text-text-muted hover:text-red-400">
+                <X size={12} />
+              </button>
             </div>
           ))}
-          <button
-            onClick={addRule}
-            className="w-full py-2 border border-dashed border-surface-lighter rounded-lg text-sm text-text-muted hover:text-text hover:border-primary transition-colors"
-          >
-            + Add Format Rule
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newRule}
+              onChange={e => setNewRule(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addRule()}
+              placeholder='e.g. "All card titles 14pt bold"'
+              className="flex-1 bg-surface text-text border border-surface-lighter rounded-lg px-3 py-2 text-sm placeholder:text-text-light outline-none focus:border-primary transition-colors"
+            />
+            <button
+              onClick={addRule}
+              disabled={!newRule.trim()}
+              className="px-3 py-2 bg-primary/10 text-primary text-sm rounded-lg hover:bg-primary/20 transition-colors disabled:opacity-40"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
       </section>
     </div>

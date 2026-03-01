@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBI Design System Extractor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f13;--surface:#1a1a22;--surface2:#24242f;--surface3:#2a2a38;--border:#2e2e3a;--border2:#3e3e4e;--text:#e8e8ed;--text2:#9898a8;--text3:#686878;--accent:#7c6aff;--accent2:#ff6ab0;--green:#7cda9c;--orange:#ffaa5c;--red:#ff5c6a;--blue:#5ca8ff;--radius:14px;--shadow:0 8px 32px rgba(0,0,0,.4)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.app{max-width:1440px;margin:0 auto;padding:24px}
+header{text-align:center;margin-bottom:32px}
+header h1{font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.5px}
+header p{color:var(--text2);font-size:13px;margin-top:4px}
+
+/* Layout */
+.main-grid{display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.sidebar{display:flex;flex-direction:column;gap:16px}
+.content{display:flex;flex-direction:column;gap:16px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1100px){.three-col{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.three-col{grid-template-columns:1fr}}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card h2{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
+.card h2 span{font-size:16px}
+.card h3{font-size:12px;font-weight:600;margin:14px 0 8px;color:var(--text);display:flex;align-items:center;gap:6px}
+.card h3:first-child{margin-top:0}
+
+/* Drop Zone */
+#dropzone{border:2px dashed var(--border);border-radius:10px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .25s;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#dropzone.active{border-color:var(--accent);background:rgba(124,106,255,.08)}
+#dropzone.has-image{padding:8px;border-style:solid}
+#dropzone p{color:var(--text2);font-size:13px}
+#dropzone .icon{font-size:32px;margin-bottom:8px;opacity:.6}
+#dropzone img{max-width:100%;max-height:240px;border-radius:8px;object-fit:contain}
+#dropzone input{display:none}
+
+/* Visual Type Tags */
+.visual-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.vtag{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .15s;user-select:none}
+.vtag:hover{border-color:var(--accent);color:var(--text)}
+.vtag.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Color Grid */
+.color-grid{display:flex;flex-wrap:wrap;gap:8px}
+.color-swatch{width:44px;height:44px;border-radius:8px;cursor:grab;position:relative;transition:transform .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.color-swatch:hover{transform:scale(1.15);z-index:2}
+.color-swatch .hex{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text2);white-space:nowrap;opacity:0;transition:opacity .15s}
+.color-swatch:hover .hex{opacity:1}
+.empty-state{color:var(--text3);font-size:12px;font-style:italic;padding:16px 0;text-align:center;width:100%}
+
+/* Palette */
+.palette-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.palette-slot{width:52px;height:52px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);transition:all .2s;position:relative;flex-shrink:0}
+.palette-slot.filled{border-style:solid;border-color:transparent}
+.palette-slot.drag-over{border-color:var(--accent);background:rgba(124,106,255,.15);transform:scale(1.06)}
+.palette-slot .remove{position:absolute;top:-5px;right:-5px;width:16px;height:16px;background:var(--red);border:none;border-radius:50%;color:#fff;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1}
+.palette-slot.filled:hover .remove{display:flex}
+.palette-labels{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.palette-labels span{font-size:9px;color:var(--text3);width:52px;text-align:center;display:block}
+
+/* Form Controls */
+.form-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.form-row label{font-size:11px;color:var(--text2);min-width:70px;flex-shrink:0}
+.form-row input[type="text"],.form-row input[type="number"],.form-row select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;flex:1;min-width:0}
+.form-row input[type="color"]{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);cursor:pointer;padding:2px}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:var(--accent)}
+.form-row .unit{font-size:10px;color:var(--text3);margin-left:-4px}
+input[type="range"]{-webkit-appearance:none;background:var(--surface2);height:4px;border-radius:2px;outline:none;flex:1}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+.range-val{font-size:11px;color:var(--text2);min-width:28px;text-align:right}
+
+/* Font entry */
+.font-entry{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px}
+.font-entry .font-preview{font-size:18px;margin-top:6px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:6px}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;margin-bottom:14px;background:var(--surface2);border-radius:8px;padding:3px;overflow-x:auto}
+.tab{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;white-space:nowrap;border:none;background:none}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Preview box */
+.preview-visual{background:var(--surface2);border-radius:10px;padding:20px;min-height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;overflow:hidden}
+.preview-visual .preview-card{background:#fff;color:#333;padding:16px 20px;border-radius:8px;min-width:200px;text-align:center;transition:all .3s}
+.preview-visual .preview-card h4{font-size:14px;margin-bottom:4px}
+.preview-visual .preview-card p{font-size:11px;color:#888}
+
+/* JSON Preview */
+.json-preview{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:11px;line-height:1.5;color:#b8b8cc;max-height:400px;overflow-y:auto;white-space:pre;tab-size:2}
+.json-preview .key{color:var(--accent)}
+.json-preview .string{color:var(--green)}
+.json-preview .number{color:var(--orange)}
+.json-preview .bracket{color:var(--text3)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:1px solid var(--border);border-radius:7px;background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--accent);background:rgba(124,106,255,.1)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#6b59ee}
+.actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;transition:transform .3s ease;z-index:99;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Section divider */
+.divider{height:1px;background:var(--border);margin:10px 0}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>⬡ PBI Design System Extractor</h1>
+    <p>Upload screenshots → Extract the complete visual language → Export production-ready theme</p>
+  </header>
+
+  <div class="main-grid">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <!-- Upload & Visual Type -->
+      <div class="card">
+        <h2><span>📸</span> Screenshot</h2>
+        <div id="dropzone" tabindex="0">
+          <div class="icon">🖼️</div>
+          <p>Drop image, paste, or click</p>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <h3>🏷️ Visual Type</h3>
+        <div class="visual-tags" id="visualTags"></div>
+      </div>
+
+      <!-- Extracted Colors -->
+      <div class="card">
+        <h2><span>🎨</span> Extracted Colors</h2>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Click or drag to palette</p>
+        <div class="color-grid" id="colorGrid">
+          <div class="empty-state">Upload an image to extract</div>
+        </div>
+      </div>
+
+      <!-- Theme Palette -->
+      <div class="card">
+        <h2><span>🧩</span> Theme Palette</h2>
+        <div class="palette-labels" id="paletteLabels"></div>
+        <div class="palette-row" id="paletteSlots"></div>
+        <div class="actions">
+          <button class="btn" onclick="clearPalette()">🗑 Clear</button>
+          <button class="btn" onclick="randomFill()">🎲 Random</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- Design System Panels -->
+      <div class="card">
+        <h2><span>⚙️</span> Format Pane Settings</h2>
+        <div class="tabs" id="formatTabs">
+          <button class="tab active" data-tab="fonts">🔤 Fonts</button>
+          <button class="tab" data-tab="borders">◻️ Borders</button>
+          <button class="tab" data-tab="shadows">🌑 Shadows</button>
+          <button class="tab" data-tab="spacing">📐 Spacing</button>
+          <button class="tab" data-tab="backgrounds">🎨 Background</button>
+          <button class="tab" data-tab="headers">📊 Visual Headers</button>
+          <button class="tab" data-tab="gridaxis">📏 Grid & Axis</button>
+        </div>
+
+        <!-- FONTS TAB -->
+        <div class="tab-content active" id="tab-fonts">
+          <div id="fontEntries"></div>
+          <button class="btn" onclick="addFontEntry()" style="margin-top:8px">+ Add Font</button>
+          <div class="divider"></div>
+          <h3>Quick Presets</h3>
+          <div class="actions" style="margin-top:0">
+            <button class="btn" onclick="applyFontPreset('segoe')">Segoe UI</button>
+            <button class="btn" onclick="applyFontPreset('din')">DIN</button>
+            <button class="btn" onclick="applyFontPreset('arial')">Arial</button>
+            <button class="btn" onclick="applyFontPreset('poppins')">Poppins</button>
+          </div>
+        </div>
+
+        <!-- BORDERS TAB -->
+        <div class="tab-content" id="tab-borders">
+          <div class="form-row">
+            <label>Style</label>
+            <select id="borderStyle" onchange="updateDesign()">
+              <option value="none">None</option>
+              <option value="solid" selected>Solid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Width</label>
+            <input type="range" id="borderWidth" min="0" max="10" value="1" oninput="updateDesign()">
+            <span class="range-val" id="borderWidthVal">1px</span>
+          </div>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="borderColor" value="#e0e0e0" onchange="updateDesign()">
+            <input type="text" id="borderColorText" value="#e0e0e0" style="width:80px" oninput="syncColorFromText(this,'borderColor')">
+          </div>
+          <div class="form-row">
+            <label>Radius</label>
+            <input type="range" id="borderRadius" min="0" max="30" value="8" oninput="updateDesign()">
+            <span class="range-val" id="borderRadiusVal">8px</span>
+          </div>
+          <div class="divider"></div>
+          <h3>Per-side override</h3>
+          <div class="form-row">
+            <label>Top</label><input type="number" id="borderTop" value="" placeholder="inherit" min="0" max="10" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+            <label>Right</label><input type="number" id="borderRight" value="" placeholder="inherit" min="0" max="10" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+          </div>
+          <div class="form-row">
+            <label>Bottom</label><input type="number" id="borderBottom" value="" placeholder="inherit" min="0" max="10" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+            <label>Left</label><input type="number" id="borderLeft" value="" placeholder="inherit" min="0" max="10" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+          </div>
+        </div>
+
+        <!-- SHADOWS TAB -->
+        <div class="tab-content" id="tab-shadows">
+          <div class="form-row">
+            <label>Preset</label>
+            <select id="shadowPreset" onchange="applyShadowPreset()">
+              <option value="none">None</option>
+              <option value="subtle">Subtle</option>
+              <option value="medium" selected>Medium</option>
+              <option value="heavy">Heavy</option>
+              <option value="inner">Inner Shadow</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="shadowColor" value="#000000" onchange="updateDesign()">
+            <input type="text" id="shadowColorText" value="#000000" style="width:80px" oninput="syncColorFromText(this,'shadowColor')">
+          </div>
+          <div class="form-row">
+            <label>Opacity</label>
+            <input type="range" id="shadowOpacity" min="0" max="100" value="20" oninput="updateDesign()">
+            <span class="range-val" id="shadowOpacityVal">20%</span>
+          </div>
+          <div class="form-row">
+            <label>Blur</label>
+            <input type="range" id="shadowBlur" min="0" max="60" value="16" oninput="updateDesign()">
+            <span class="range-val" id="shadowBlurVal">16px</span>
+          </div>
+          <div class="form-row">
+            <label>Offset X</label>
+            <input type="range" id="shadowX" min="-30" max="30" value="0" oninput="updateDesign()">
+            <span class="range-val" id="shadowXVal">0px</span>
+          </div>
+          <div class="form-row">
+            <label>Offset Y</label>
+            <input type="range" id="shadowY" min="-30" max="30" value="4" oninput="updateDesign()">
+            <span class="range-val" id="shadowYVal">4px</span>
+          </div>
+          <div class="form-row">
+            <label>Spread</label>
+            <input type="range" id="shadowSpread" min="-20" max="20" value="0" oninput="updateDesign()">
+            <span class="range-val" id="shadowSpreadVal">0px</span>
+          </div>
+        </div>
+
+        <!-- SPACING TAB -->
+        <div class="tab-content" id="tab-spacing">
+          <h3>Padding (internal)</h3>
+          <div class="form-row">
+            <label>Top</label><input type="number" id="padTop" value="16" min="0" max="100" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+            <label>Right</label><input type="number" id="padRight" value="20" min="0" max="100" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+          </div>
+          <div class="form-row">
+            <label>Bottom</label><input type="number" id="padBottom" value="16" min="0" max="100" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+            <label>Left</label><input type="number" id="padLeft" value="20" min="0" max="100" style="width:60px" oninput="updateDesign()"><span class="unit">px</span>
+          </div>
+          <div class="divider"></div>
+          <h3>Visual Spacing</h3>
+          <div class="form-row">
+            <label>Gap between visuals</label>
+            <input type="range" id="visualGap" min="0" max="40" value="12" oninput="updateDesign()">
+            <span class="range-val" id="visualGapVal">12px</span>
+          </div>
+          <div class="form-row">
+            <label>Page margin</label>
+            <input type="range" id="pageMargin" min="0" max="60" value="16" oninput="updateDesign()">
+            <span class="range-val" id="pageMarginVal">16px</span>
+          </div>
+        </div>
+
+        <!-- BACKGROUNDS TAB -->
+        <div class="tab-content" id="tab-backgrounds">
+          <h3>Page Background</h3>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="pageBg" value="#f0f0f0" onchange="updateDesign()">
+            <input type="text" id="pageBgText" value="#f0f0f0" style="width:80px" oninput="syncColorFromText(this,'pageBg')">
+          </div>
+          <div class="form-row">
+            <label>Transparency</label>
+            <input type="range" id="pageBgAlpha" min="0" max="100" value="100" oninput="updateDesign()">
+            <span class="range-val" id="pageBgAlphaVal">100%</span>
+          </div>
+          <div class="divider"></div>
+          <h3>Visual Background</h3>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="visualBg" value="#ffffff" onchange="updateDesign()">
+            <input type="text" id="visualBgText" value="#ffffff" style="width:80px" oninput="syncColorFromText(this,'visualBg')">
+          </div>
+          <div class="form-row">
+            <label>Transparency</label>
+            <input type="range" id="visualBgAlpha" min="0" max="100" value="100" oninput="updateDesign()">
+            <span class="range-val" id="visualBgAlphaVal">100%</span>
+          </div>
+        </div>
+
+        <!-- VISUAL HEADERS TAB -->
+        <div class="tab-content" id="tab-headers">
+          <div class="form-row">
+            <label>Show header</label>
+            <select id="headerShow" onchange="updateDesign()">
+              <option value="auto">Auto (on hover)</option>
+              <option value="always">Always visible</option>
+              <option value="never">Never</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Icon color</label>
+            <input type="color" id="headerIconColor" value="#666666" onchange="updateDesign()">
+            <input type="text" id="headerIconColorText" value="#666666" style="width:80px" oninput="syncColorFromText(this,'headerIconColor')">
+          </div>
+          <div class="form-row">
+            <label>Background</label>
+            <input type="color" id="headerBg" value="#ffffff" onchange="updateDesign()">
+            <input type="text" id="headerBgText" value="#ffffff" style="width:80px" oninput="syncColorFromText(this,'headerBg')">
+          </div>
+          <div class="form-row">
+            <label>Border</label>
+            <select id="headerBorder" onchange="updateDesign()">
+              <option value="none" selected>None</option>
+              <option value="bottom">Bottom line</option>
+              <option value="outline">Full outline</option>
+            </select>
+          </div>
+          <div class="divider"></div>
+          <h3>Title</h3>
+          <div class="form-row">
+            <label>Font family</label>
+            <input type="text" id="titleFont" value="Segoe UI" oninput="updateDesign()">
+          </div>
+          <div class="form-row">
+            <label>Size</label>
+            <input type="number" id="titleSize" value="12" min="6" max="40" style="width:60px" oninput="updateDesign()"><span class="unit">pt</span>
+            <label>Weight</label>
+            <select id="titleWeight" onchange="updateDesign()">
+              <option value="400">Regular</option>
+              <option value="600" selected>Semibold</option>
+              <option value="700">Bold</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="titleColor" value="#333333" onchange="updateDesign()">
+            <input type="text" id="titleColorText" value="#333333" style="width:80px" oninput="syncColorFromText(this,'titleColor')">
+          </div>
+        </div>
+
+        <!-- GRID & AXIS TAB -->
+        <div class="tab-content" id="tab-gridaxis">
+          <h3>Gridlines</h3>
+          <div class="form-row">
+            <label>Show</label>
+            <select id="gridShow" onchange="updateDesign()">
+              <option value="both">Both axes</option>
+              <option value="x">X only</option>
+              <option value="y" selected>Y only</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="gridColor" value="#e8e8e8" onchange="updateDesign()">
+            <input type="text" id="gridColorText" value="#e8e8e8" style="width:80px" oninput="syncColorFromText(this,'gridColor')">
+          </div>
+          <div class="form-row">
+            <label>Style</label>
+            <select id="gridStyle" onchange="updateDesign()">
+              <option value="solid" selected>Solid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Width</label>
+            <input type="range" id="gridWidth" min="0.5" max="4" step="0.5" value="1" oninput="updateDesign()">
+            <span class="range-val" id="gridWidthVal">1px</span>
+          </div>
+          <div class="divider"></div>
+          <h3>Axis Labels</h3>
+          <div class="form-row">
+            <label>Font family</label>
+            <input type="text" id="axisFont" value="Segoe UI" oninput="updateDesign()">
+          </div>
+          <div class="form-row">
+            <label>Size</label>
+            <input type="number" id="axisSize" value="10" min="6" max="24" style="width:60px" oninput="updateDesign()"><span class="unit">pt</span>
+            <label>Color</label>
+            <input type="color" id="axisColor" value="#888888" onchange="updateDesign()">
+          </div>
+          <div class="divider"></div>
+          <h3>Axis Lines</h3>
+          <div class="form-row">
+            <label>Show</label>
+            <select id="axisLineShow" onchange="updateDesign()">
+              <option value="both">Both</option>
+              <option value="x" selected>X only</option>
+              <option value="y">Y only</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Color</label>
+            <input type="color" id="axisLineColor" value="#cccccc" onchange="updateDesign()">
+            <label>Width</label>
+            <input type="number" id="axisLineWidth" value="1" min="0" max="5" style="width:50px" oninput="updateDesign()"><span class="unit">px</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Preview -->
+      <div class="card">
+        <h2><span>👁️</span> Live Preview</h2>
+        <div class="preview-visual" id="previewArea">
+          <div class="preview-card" id="previewCard">
+            <h4 id="previewTitle">Revenue by Region</h4>
+            <p>Sample visual preview</p>
+            <div id="previewBars" style="display:flex;gap:4px;align-items:flex-end;height:50px;margin-top:10px;justify-content:center"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="two-col">
+        <div class="card">
+          <h2><span>📋</span> Theme JSON</h2>
+          <div class="json-preview" id="jsonPreview"></div>
+          <div class="actions">
+            <button class="btn" onclick="copyJSON()">📄 Copy</button>
+            <button class="btn" onclick="downloadJSON()">💾 Download</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2><span>📑</span> Format Spec</h2>
+          <div class="json-preview" id="formatSpec"></div>
+          <div class="actions">
+            <button class="btn" onclick="copyFormatSpec()">📄 Copy Spec</button>
+            <button class="btn btn-primary" onclick="downloadFullPackage()">📦 Full Package</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== STATE ==========
+const SLOT_NAMES=['primary','secondary','accent1','accent2','accent3','accent4'];
+const VISUAL_TYPES=['Card','Bar Chart','Line Chart','Column Chart','Table','Matrix','KPI','Gauge','Map','Treemap','Pie/Donut','Scatter','Waterfall','Slicer','Text Box','Shape','Image','Decomp Tree','Ribbon','Funnel'];
+let extractedColors=[];
+let palette=new Array(6).fill(null);
+let selectedVisualTypes=new Set();
+let fonts=[{family:'Segoe UI',role:'Primary',size:12,weight:'600'},{family:'Segoe UI',role:'Data Labels',size:10,weight:'400'}];
+
+// ========== INIT ==========
+function init(){
+  initVisualTags();
+  initPaletteSlots();
+  renderFonts();
+  updateDesign();
+}
+
+// ========== VISUAL TYPE TAGS ==========
+function initVisualTags(){
+  const c=document.getElementById('visualTags');
+  c.innerHTML='';
+  VISUAL_TYPES.forEach(t=>{
+    const el=document.createElement('span');
+    el.className='vtag';
+    el.textContent=t;
+    el.onclick=()=>{
+      if(selectedVisualTypes.has(t)){selectedVisualTypes.delete(t);el.classList.remove('active')}
+      else{selectedVisualTypes.add(t);el.classList.add('active')}
+      renderJSON();renderFormatSpec();
+    };
+    c.appendChild(el);
+  });
+}
+
+// ========== TABS ==========
+document.addEventListener('click',e=>{
+  if(!e.target.classList.contains('tab'))return;
+  const tabs=e.target.parentElement;
+  tabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  e.target.classList.add('active');
+  const tabId=e.target.dataset.tab;
+  const card=tabs.closest('.card');
+  card.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  card.querySelector('#tab-'+tabId).classList.add('active');
+});
+
+// ========== PALETTE SLOTS ==========
+function initPaletteSlots(){
+  const labelsEl=document.getElementById('paletteLabels');
+  const slotsEl=document.getElementById('paletteSlots');
+  labelsEl.innerHTML='';slotsEl.innerHTML='';
+  SLOT_NAMES.forEach((_,i)=>{
+    const lbl=document.createElement('span');
+    lbl.textContent=SLOT_NAMES[i].replace(/([A-Z])/,' $1');
+    labelsEl.appendChild(lbl);
+    const s=document.createElement('div');
+    s.className='palette-slot';s.dataset.index=i;s.textContent='+';
+    s.addEventListener('dragover',e=>{e.preventDefault();s.classList.add('drag-over')});
+    s.addEventListener('dragleave',()=>s.classList.remove('drag-over'));
+    s.addEventListener('drop',e=>{e.preventDefault();s.classList.remove('drag-over');const c=e.dataTransfer.getData('text/plain');if(c){palette[i]=c;renderPalette();renderJSON();renderFormatSpec()}});
+    slotsEl.appendChild(s);
+  });
+}
+
+// ========== DROP ZONE ==========
+const dz=document.getElementById('dropzone');
+const fi=document.getElementById('fileInput');
+dz.addEventListener('click',()=>fi.click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('active')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('active'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('active');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+fi.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+document.addEventListener('paste',e=>{const items=[...e.clipboardData.items];const img=items.find(i=>i.type.startsWith('image/'));if(img)handleFile(img.getAsFile())});
+
+function handleFile(file){
+  const r=new FileReader();
+  r.onload=e=>{dz.innerHTML=`<img src="${e.target.result}">`;dz.classList.add('has-image');extractColors(e.target.result)};
+  r.readAsDataURL(file);
+}
+
+// ========== COLOR EXTRACTION ==========
+function extractColors(src){
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{
+    const c=document.createElement('canvas');const ctx=c.getContext('2d');
+    const scale=Math.min(1,150/Math.max(img.width,img.height));
+    c.width=img.width*scale;c.height=img.height*scale;
+    ctx.drawImage(img,0,0,c.width,c.height);
+    const data=ctx.getImageData(0,0,c.width,c.height).data;
+    const pixels=[];
+    for(let i=0;i<data.length;i+=16){
+      const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
+      if(a<128)continue;
+      const lum=r*.299+g*.587+b*.114;
+      if(lum>245||lum<10)continue;
+      pixels.push([r,g,b]);
+    }
+    extractedColors=kMeans(pixels,12).map(c=>`#${c.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')}`);
+    renderExtracted();
+  };
+  img.src=src;
+}
+
+function kMeans(pixels,k,iterations=12){
+  if(!pixels.length)return[];
+  k=Math.min(k,pixels.length);
+  let centroids=[];const used=new Set();
+  while(centroids.length<k){const idx=Math.floor(Math.random()*pixels.length);if(!used.has(idx)){used.add(idx);centroids.push([...pixels[idx]])}}
+  for(let iter=0;iter<iterations;iter++){
+    const clusters=Array.from({length:k},()=>[]);
+    for(const p of pixels){let minD=Infinity,minI=0;for(let i=0;i<k;i++){const d=(p[0]-centroids[i][0])**2+(p[1]-centroids[i][1])**2+(p[2]-centroids[i][2])**2;if(d<minD){minD=d;minI=i}}clusters[minI].push(p)}
+    for(let i=0;i<k;i++){if(!clusters[i].length)continue;centroids[i]=clusters[i].reduce((a,p)=>[a[0]+p[0],a[1]+p[1],a[2]+p[2]],[0,0,0]).map(v=>v/clusters[i].length)}
+  }
+  centroids.sort((a,b)=>(a[0]*.299+a[1]*.587+a[2]*.114)-(b[0]*.299+b[1]*.587+b[2]*.114));
+  const result=[centroids[0]];
+  for(let i=1;i<centroids.length;i++){const last=result[result.length-1];const d=Math.sqrt((centroids[i][0]-last[0])**2+(centroids[i][1]-last[1])**2+(centroids[i][2]-last[2])**2);if(d>25)result.push(centroids[i])}
+  return result.slice(0,10);
+}
+
+function renderExtracted(){
+  const g=document.getElementById('colorGrid');
+  if(!extractedColors.length){g.innerHTML='<div class="empty-state">No distinct colors found</div>';return}
+  g.innerHTML='';
+  extractedColors.forEach(hex=>{
+    const s=document.createElement('div');s.className='color-swatch';s.style.background=hex;s.draggable=true;
+    s.innerHTML=`<span class="hex">${hex}</span>`;
+    s.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',hex));
+    s.addEventListener('click',()=>{const empty=palette.indexOf(null);if(empty!==-1){palette[empty]=hex;renderPalette();renderJSON();renderFormatSpec();toast(`Added ${hex}`)}});
+    g.appendChild(s);
+  });
+}
+
+// ========== PALETTE ==========
+function renderPalette(){
+  const slots=document.getElementById('paletteSlots').children;
+  for(let i=0;i<6;i++){
+    const s=slots[i];
+    if(palette[i]){
+      s.className='palette-slot filled';s.style.background=palette[i];s.style.borderColor=palette[i];s.textContent='';
+      let rm=s.querySelector('.remove');
+      if(!rm){rm=document.createElement('button');rm.className='remove';rm.textContent='×';rm.onclick=e=>{e.stopPropagation();palette[i]=null;renderPalette();renderJSON();renderFormatSpec()};s.appendChild(rm)}
+    }else{
+      s.className='palette-slot';s.style.background='';s.style.borderColor='';s.textContent='+';
+      const rm=s.querySelector('.remove');if(rm)rm.remove();
+    }
+  }
+  updatePreviewColors();
+}
+
+function clearPalette(){palette.fill(null);renderPalette();renderJSON();renderFormatSpec()}
+function randomFill(){
+  if(!extractedColors.length){toast('Upload an image first!');return}
+  const shuffled=[...extractedColors].sort(()=>Math.random()-.5);
+  for(let i=0;i<6;i++)palette[i]=shuffled[i%shuffled.length]||null;
+  renderPalette();renderJSON();renderFormatSpec();toast('🎲 Randomized!');
+}
+
+// ========== FONTS ==========
+function renderFonts(){
+  const c=document.getElementById('fontEntries');c.innerHTML='';
+  fonts.forEach((f,i)=>{
+    const el=document.createElement('div');el.className='font-entry';
+    el.innerHTML=`
+      <div class="form-row"><label>Role</label>
+        <select onchange="fonts[${i}].role=this.value;updateDesign()">
+          ${['Primary','Secondary','Data Labels','Title','Subtitle','Axis','Tooltip','Card Value'].map(r=>`<option${r===f.role?' selected':''}>${r}</option>`).join('')}
+        </select>
+        <button class="btn" onclick="fonts.splice(${i},1);renderFonts();updateDesign()" style="padding:3px 8px;color:var(--red)">×</button>
+      </div>
+      <div class="form-row"><label>Family</label><input type="text" value="${f.family}" oninput="fonts[${i}].family=this.value;updateDesign()"></div>
+      <div class="form-row">
+        <label>Size</label><input type="number" value="${f.size}" min="6" max="72" style="width:60px" oninput="fonts[${i}].size=+this.value;updateDesign()"><span class="unit">pt</span>
+        <label>Weight</label>
+        <select onchange="fonts[${i}].weight=this.value;updateDesign()">
+          ${[['300','Light'],['400','Regular'],['500','Medium'],['600','Semibold'],['700','Bold'],['800','Extra Bold']].map(([v,l])=>`<option value="${v}"${v===f.weight?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="font-preview" style="font-family:'${f.family}',sans-serif;font-weight:${f.weight};font-size:${Math.min(f.size*1.5,28)}px">Aa Bb Cc 123</div>
+    `;
+    c.appendChild(el);
+  });
+}
+
+function addFontEntry(){fonts.push({family:'Segoe UI',role:'Secondary',size:10,weight:'400'});renderFonts();updateDesign()}
+
+function applyFontPreset(preset){
+  const presets={
+    segoe:[{family:'Segoe UI',role:'Primary',size:12,weight:'600'},{family:'Segoe UI',role:'Data Labels',size:10,weight:'400'}],
+    din:[{family:'DIN',role:'Primary',size:14,weight:'700'},{family:'DIN',role:'Data Labels',size:10,weight:'400'}],
+    arial:[{family:'Arial',role:'Primary',size:12,weight:'700'},{family:'Arial',role:'Data Labels',size:10,weight:'400'}],
+    poppins:[{family:'Poppins',role:'Primary',size:13,weight:'600'},{family:'Poppins',role:'Data Labels',size:10,weight:'400'}],
+  };
+  fonts=presets[preset]||fonts;
+  renderFonts();updateDesign();toast('Font preset applied');
+}
+
+// ========== SHADOW PRESETS ==========
+function applyShadowPreset(){
+  const v=document.getElementById('shadowPreset').value;
+  const presets={none:[0,0,0,0,'#000000',0],subtle:[0,2,8,0,'#000000',10],medium:[0,4,16,0,'#000000',20],heavy:[0,8,32,0,'#000000',35],inner:[0,2,8,0,'#000000',15]};
+  if(presets[v]){
+    const[x,y,blur,spread,color,opacity]=presets[v];
+    document.getElementById('shadowX').value=x;
+    document.getElementById('shadowY').value=y;
+    document.getElementById('shadowBlur').value=blur;
+    document.getElementById('shadowSpread').value=spread;
+    document.getElementById('shadowColor').value=color;
+    document.getElementById('shadowOpacity').value=opacity;
+  }
+  updateDesign();
+}
+
+// ========== SYNC HELPERS ==========
+function syncColorFromText(textInput,colorInputId){
+  const v=textInput.value;
+  if(/^#[0-9a-fA-F]{6}$/.test(v)){document.getElementById(colorInputId).value=v;updateDesign()}
+}
+
+function v(id){return document.getElementById(id)?.value}
+function vn(id){return parseFloat(document.getElementById(id)?.value)||0}
+
+// ========== UPDATE DESIGN / PREVIEW ==========
+function updateDesign(){
+  // Update range value displays
+  const rangeDisplays=[
+    ['borderWidth','borderWidthVal','px'],['borderRadius','borderRadiusVal','px'],
+    ['shadowBlur','shadowBlurVal','px'],['shadowX','shadowXVal','px'],['shadowY','shadowYVal','px'],
+    ['shadowSpread','shadowSpreadVal','px'],['shadowOpacity','shadowOpacityVal','%'],
+    ['visualGap','visualGapVal','px'],['pageMargin','pageMarginVal','px'],
+    ['pageBgAlpha','pageBgAlphaVal','%'],['visualBgAlpha','visualBgAlphaVal','%'],
+    ['gridWidth','gridWidthVal','px'],
+  ];
+  rangeDisplays.forEach(([id,valId,unit])=>{
+    const el=document.getElementById(valId);
+    if(el)el.textContent=v(id)+unit;
+  });
+
+  // Sync color text inputs
+  ['borderColor','shadowColor','pageBg','visualBg','headerIconColor','headerBg','titleColor','gridColor'].forEach(id=>{
+    const txt=document.getElementById(id+'Text');
+    const col=document.getElementById(id);
+    if(txt&&col)txt.value=col.value;
+  });
+
+  // Update preview card
+  const card=document.getElementById('previewCard');
+  const area=document.getElementById('previewArea');
+  if(card&&area){
+    // Background
+    const pageBgHex=v('pageBg');
+    const pageBgA=vn('pageBgAlpha')/100;
+    area.style.background=hexToRgba(pageBgHex,pageBgA);
+
+    const visBgHex=v('visualBg');
+    const visBgA=vn('visualBgAlpha')/100;
+    card.style.background=hexToRgba(visBgHex,visBgA);
+
+    // Borders
+    const bStyle=v('borderStyle');
+    const bWidth=v('borderWidth')+'px';
+    const bColor=v('borderColor');
+    const bRadius=v('borderRadius')+'px';
+    card.style.border=bStyle==='none'?'none':`${bWidth} ${bStyle} ${bColor}`;
+    card.style.borderRadius=bRadius;
+
+    // Shadow
+    const sColor=v('shadowColor');
+    const sOpacity=vn('shadowOpacity')/100;
+    const sBlur=v('shadowBlur')+'px';
+    const sX=v('shadowX')+'px';
+    const sY=v('shadowY')+'px';
+    const sSpread=v('shadowSpread')+'px';
+    const preset=v('shadowPreset');
+    const inset=preset==='inner'?'inset ':'';
+    card.style.boxShadow=preset==='none'?'none':`${inset}${sX} ${sY} ${sBlur} ${sSpread} ${hexToRgba(sColor,sOpacity)}`;
+
+    // Padding
+    card.style.padding=`${v('padTop')}px ${v('padRight')}px ${v('padBottom')}px ${v('padLeft')}px`;
+
+    // Title font
+    const title=document.getElementById('previewTitle');
+    title.style.fontFamily=`'${v('titleFont')}', sans-serif`;
+    title.style.fontSize=v('titleSize')+'pt';
+    title.style.fontWeight=v('titleWeight');
+    title.style.color=v('titleColor');
+  }
+
+  updatePreviewColors();
+  renderJSON();
+  renderFormatSpec();
+}
+
+function updatePreviewColors(){
+  const bars=document.getElementById('previewBars');
+  if(!bars)return;
+  const colors=palette.filter(Boolean);
+  if(colors.length===0){bars.innerHTML='<span style="font-size:10px;color:#ccc">Add colors to palette</span>';return}
+  bars.innerHTML='';
+  const heights=[70,50,85,40,60,45];
+  colors.forEach((c,i)=>{
+    const bar=document.createElement('div');
+    bar.style.cssText=`width:24px;height:${heights[i%heights.length]}%;background:${c};border-radius:3px 3px 0 0;transition:all .3s`;
+    bars.appendChild(bar);
+  });
+}
+
+function hexToRgba(hex,alpha){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ========== JSON GENERATION ==========
+function getThemeObject(){
+  const theme={
+    name:"Custom PBI Theme",
+    dataColors:palette.filter(Boolean),
+    background:v('pageBg'),
+    foreground:v('titleColor'),
+    tableAccent:palette[0]||"#7c6aff",
+    visualStyles:{"*":{"*":{
+      "*":[{
+        fontFamily:fonts[0]?.family||"Segoe UI",
+        fontSize:fonts.find(f=>f.role==='Data Labels')?.size||10
+      }],
+      background:[{color:{solid:{color:v('visualBg')}},transparency:100-vn('visualBgAlpha')}],
+      border:[{
+        show:v('borderStyle')!=='none',
+        color:{solid:{color:v('borderColor')}},
+        radius:vn('borderRadius')
+      }],
+      dropShadow:[{
+        show:v('shadowPreset')!=='none',
+        color:{solid:{color:v('shadowColor')}},
+        blur:vn('shadowBlur'),
+        angle:Math.round(Math.atan2(vn('shadowY'),vn('shadowX'))*180/Math.PI)||90,
+        transparency:100-vn('shadowOpacity')
+      }],
+      visualHeader:[{
+        show:v('headerShow')!=='never',
+        foreground:{solid:{color:v('headerIconColor')}},
+        background:{solid:{color:v('headerBg')}},
+        border:{solid:{color:v('headerBorder')==='outline'?v('borderColor'):'transparent'}}
+      }],
+      visualHeaderTooltip:[{show:true}]
+    }}}
+  };
+  // Add page settings
+  theme.visualStyles.page={"*":{
+    background:[{color:{solid:{color:v('pageBg')}},transparency:100-vn('pageBgAlpha')}],
+    outspace:[{color:{solid:{color:v('pageBg')}}}],
+    outspacePaneSize:[{size:vn('pageMargin')}]
+  }};
+  return theme;
+}
+
+function renderJSON(){
+  const el=document.getElementById('jsonPreview');
+  const theme=getThemeObject();
+  const json=JSON.stringify(theme,null,2);
+  el.innerHTML=syntaxHighlight(json);
+}
+
+function syntaxHighlight(json){
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"([^"]+)":/g,'<span class="key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g,': <span class="string">"$1"</span>')
+    .replace(/: (\d+\.?\d*)/g,': <span class="number">$1</span>')
+    .replace(/: (true|false)/g,': <span class="number">$1</span>')
+    .replace(/[{}\[\]]/g,'<span class="bracket">$&</span>');
+}
+
+// ========== FORMAT SPEC ==========
+function getFormatSpec(){
+  return {
+    _meta:{
+      tool:"PBI Design System Extractor",
+      exported:new Date().toISOString(),
+      visualTypes:[...selectedVisualTypes]
+    },
+    palette:{
+      dataColors:palette.filter(Boolean),
+      roles:SLOT_NAMES.reduce((acc,name,i)=>{if(palette[i])acc[name]=palette[i];return acc},{})
+    },
+    typography:{
+      fonts:fonts.map(f=>({role:f.role,family:f.family,size:f.size+'pt',weight:f.weight}))
+    },
+    borders:{
+      style:v('borderStyle'),
+      width:vn('borderWidth')+'px',
+      color:v('borderColor'),
+      radius:vn('borderRadius')+'px',
+      perSide:{
+        top:v('borderTop')?v('borderTop')+'px':'inherit',
+        right:v('borderRight')?v('borderRight')+'px':'inherit',
+        bottom:v('borderBottom')?v('borderBottom')+'px':'inherit',
+        left:v('borderLeft')?v('borderLeft')+'px':'inherit'
+      }
+    },
+    shadows:{
+      preset:v('shadowPreset'),
+      color:v('shadowColor'),
+      opacity:vn('shadowOpacity')+'%',
+      blur:vn('shadowBlur')+'px',
+      offsetX:v('shadowX')+'px',
+      offsetY:v('shadowY')+'px',
+      spread:v('shadowSpread')+'px',
+      css:v('shadowPreset')==='none'?'none':
+        `${v('shadowPreset')==='inner'?'inset ':''}${v('shadowX')}px ${v('shadowY')}px ${v('shadowBlur')}px ${v('shadowSpread')}px ${hexToRgba(v('shadowColor'),vn('shadowOpacity')/100)}`
+    },
+    spacing:{
+      padding:{top:v('padTop')+'px',right:v('padRight')+'px',bottom:v('padBottom')+'px',left:v('padLeft')+'px'},
+      visualGap:v('visualGap')+'px',
+      pageMargin:v('pageMargin')+'px'
+    },
+    backgrounds:{
+      page:{color:v('pageBg'),transparency:(100-vn('pageBgAlpha'))+'%'},
+      visual:{color:v('visualBg'),transparency:(100-vn('visualBgAlpha'))+'%'}
+    },
+    visualHeaders:{
+      visibility:v('headerShow'),
+      iconColor:v('headerIconColor'),
+      background:v('headerBg'),
+      border:v('headerBorder'),
+      title:{fontFamily:v('titleFont'),fontSize:v('titleSize')+'pt',fontWeight:v('titleWeight'),color:v('titleColor')}
+    },
+    gridAndAxis:{
+      gridlines:{show:v('gridShow'),color:v('gridColor'),style:v('gridStyle'),width:v('gridWidth')+'px'},
+      axisLabels:{fontFamily:v('axisFont'),fontSize:v('axisSize')+'pt',color:v('axisColor')},
+      axisLines:{show:v('axisLineShow'),color:v('axisLineColor'),width:v('axisLineWidth')+'px'}
+    }
+  };
+}
+
+function renderFormatSpec(){
+  const el=document.getElementById('formatSpec');
+  const spec=getFormatSpec();
+  const json=JSON.stringify(spec,null,2);
+  el.innerHTML=syntaxHighlight(json);
+}
+
+// ========== EXPORT ==========
+function copyJSON(){
+  navigator.clipboard.writeText(JSON.stringify(getThemeObject(),null,2)).then(()=>toast('Theme JSON copied! 📋'));
+}
+function downloadJSON(){
+  const blob=new Blob([JSON.stringify(getThemeObject(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pbi-theme.json';a.click();
+  toast('Theme downloaded! 💾');
+}
+function copyFormatSpec(){
+  navigator.clipboard.writeText(JSON.stringify(getFormatSpec(),null,2)).then(()=>toast('Format spec copied! 📑'));
+}
+function downloadFullPackage(){
+  const pkg={
+    "README":"Complete PBI Design System Package - Import pbi-theme.json into Power BI, use format-spec.json as reference for manual format pane settings.",
+    theme:getThemeObject(),
+    formatSpec:getFormatSpec()
+  };
+  const blob=new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pbi-design-system.json';a.click();
+  toast('Full package downloaded! 📦');
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+
+// ========== BOOT ==========
+init();
+renderJSON();
+renderFormatSpec();
+</script>
+</body>
+</html>

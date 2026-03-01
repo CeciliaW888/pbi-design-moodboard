@@ -5,8 +5,12 @@ export default function Header({ user, onSignIn, onSignOut, themeName, onNameCha
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b border-surface-lighter bg-surface-light/85 backdrop-blur-xl sticky top-0 z-40">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-yellow flex items-center justify-center text-lg">
-          📊
+        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="11" width="4" height="7" rx="1" fill="#F2C811"/>
+            <rect x="8" y="7" width="4" height="11" rx="1" fill="white"/>
+            <rect x="14" y="3" width="4" height="15" rx="1" fill="white" opacity="0.7"/>
+          </svg>
         </div>
         <div>
           <input
@@ -39,7 +43,7 @@ export default function Header({ user, onSignIn, onSignOut, themeName, onNameCha
         {user ? (
           <div className="flex items-center gap-2">
             <img
-              src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=0078D4&color=fff&size=32`}
+              src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=0078D4&color=fff&size=32`}
               alt=""
               className="w-8 h-8 rounded-full"
             />

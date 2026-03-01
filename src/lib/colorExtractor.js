@@ -31,10 +31,13 @@ export function extractColors(imageElement, numColors = 8) {
 
 function kMeans(pixels, k, iterations = 10) {
   if (pixels.length === 0) return Array(k).fill([128, 128, 128]);
-  let centroids = pixels.slice(0, k);
-  if (centroids.length < k) {
-    while (centroids.length < k) centroids.push([...centroids[0]]);
+  // Random initialization for better color diversity
+  const indices = new Set();
+  while (indices.size < Math.min(k, pixels.length)) {
+    indices.add(Math.floor(Math.random() * pixels.length));
   }
+  let centroids = [...indices].map(i => [...pixels[i]]);
+  while (centroids.length < k) centroids.push([...centroids[0]]);
 
   for (let iter = 0; iter < iterations; iter++) {
     const clusters = Array.from({ length: k }, () => []);

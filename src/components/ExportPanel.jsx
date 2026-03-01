@@ -12,6 +12,7 @@ export default function ExportPanel({ designSystem }) {
       desc: 'Import directly into Power BI Desktop',
       icon: FileJson,
       filename: `${designSystem.name.replace(/\s+/g, '-').toLowerCase()}.json`,
+      mimeType: 'application/json',
       generate: () => exportPBITheme(designSystem)
     },
     {
@@ -20,6 +21,7 @@ export default function ExportPanel({ designSystem }) {
       desc: 'Human-readable design spec (Markdown)',
       icon: FileText,
       filename: `${designSystem.name.replace(/\s+/g, '-').toLowerCase()}-spec.md`,
+      mimeType: 'text/markdown',
       generate: () => exportFormatSpec(designSystem)
     },
     {
@@ -28,13 +30,14 @@ export default function ExportPanel({ designSystem }) {
       desc: 'For Power BI Projects (PBIP format)',
       icon: Code,
       filename: `visual-config.json`,
+      mimeType: 'application/json',
       generate: () => exportPBIPConfig(designSystem)
     }
   ];
 
   const download = (exp) => {
     const content = exp.generate();
-    const blob = new Blob([content], { type: 'application/json' });
+    const blob = new Blob([content], { type: exp.mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -44,7 +47,7 @@ export default function ExportPanel({ designSystem }) {
   };
 
   const copy = (exp) => {
-    navigator.clipboard.writeText(exp.generate());
+    navigator.clipboard.writeText(exp.generate()).catch(e => console.error('Copy failed:', e));
     setCopied(exp.id);
     setTimeout(() => setCopied(null), 2000);
   };
@@ -60,6 +63,16 @@ export default function ExportPanel({ designSystem }) {
         <p className="text-xs text-text-muted bg-surface rounded-lg p-3">
           💡 Add screenshots and extract colors first to generate meaningful exports.
         </p>
+      )}
+
+      {designSystem.colors.length > 0 && designSystem.colors.length !== 8 && (
+        <div className="flex items-start gap-2 p-3 bg-yellow-light border border-yellow/30 rounded-lg text-xs text-text-muted">
+          <span className="text-yellow-600 flex-shrink-0">⚠️</span>
+          <span>
+            Your palette has <strong>{designSystem.colors.length}</strong> colors. Power BI themes work best with{' '}
+            <strong>exactly 8 data colors</strong>. Go to the Palette tab to adjust.
+          </span>
+        </div>
       )}
 
       <div className="space-y-3">
