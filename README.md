@@ -1,7 +1,5 @@
 <div align="center">
 
-![PBI Design Moodboard](./docs/hero.svg)
-
 # PBI Design Moodboard
 
 **Build beautiful Power BI themes from dashboard screenshots. No sign-up required.**
@@ -15,6 +13,8 @@ Drop → Extract → Design → Export
 ## What is this?
 
 PBI Design Moodboard is a tool for Power BI designers and developers to build a cohesive design system from their existing dashboards. Drop in screenshots, extract color palettes, configure typography, preview how it looks, and export ready-to-use theme files — all in the browser, with no backend required.
+
+![PBI Design Moodboard](./docs/hero.svg)
 
 ## Features
 
