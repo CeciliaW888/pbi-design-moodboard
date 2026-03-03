@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Replace with your Firebase config from Firebase Console
@@ -45,6 +45,38 @@ export async function getUserMoodboards(userId) {
 
 export async function deleteMoodboard(userId, moodboardId) {
   await deleteDoc(doc(db, 'users', userId, 'moodboards', moodboardId));
+}
+
+export async function getRecentMoodboards(userId, count = 6) {
+  const q = query(
+    collection(db, 'users', userId, 'moodboards'),
+    orderBy('updatedAt', 'desc'),
+    limit(count)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function renameMoodboard(userId, moodboardId, newName) {
+  await updateDoc(doc(db, 'users', userId, 'moodboards', moodboardId), {
+    name: newName,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function duplicateMoodboard(userId, moodboardId) {
+  const docSnap = await getDoc(doc(db, 'users', userId, 'moodboards', moodboardId));
+  if (!docSnap.exists()) throw new Error('Moodboard not found');
+  const data = docSnap.data();
+  const newId = crypto.randomUUID();
+  await setDoc(doc(db, 'users', userId, 'moodboards', newId), {
+    ...data,
+    id: newId,
+    name: `${data.name || 'Untitled'} (Copy)`,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return newId;
 }
 
 // Storage operations

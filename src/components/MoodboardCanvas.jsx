@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ImageCard from './ImageCard';
+import VisualCard from './VisualCard';
+import PlaceVisualMode from './PlaceVisualMode';
 import CanvasToolbar from './CanvasToolbar';
-import { Upload, Clipboard, Monitor, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Clipboard, Monitor, Loader2, CheckCircle, AlertCircle, Wand2 } from 'lucide-react';
 
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 3;
@@ -25,6 +27,14 @@ export default function MoodboardCanvas({
   analyzing,
   selectedId,
   onSelect,
+  visuals = [],
+  onUpdateVisual,
+  onRemoveVisual,
+  onOpenGeminiModal,
+  isPlacingVisual,
+  onPlaceVisual,
+  onCancelPlace,
+  designSystem,
 }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -67,10 +77,11 @@ export default function MoodboardCanvas({
   const zoomOut = useCallback(() => setZoom(z => Math.max(MIN_ZOOM, z - ZOOM_STEP)), []);
   const zoomReset = useCallback(() => { setZoom(1); setPan({ x: 0, y: 0 }); }, []);
   const fitToScreen = useCallback(() => {
-    if (!screenshots.length || !canvasRef.current) return;
+    const allItems = [...screenshots, ...visuals];
+    if (!allItems.length || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const s of screenshots) {
+    for (const s of allItems) {
       minX = Math.min(minX, s.x);
       minY = Math.min(minY, s.y);
       maxX = Math.max(maxX, s.x + s.width);
@@ -84,7 +95,7 @@ export default function MoodboardCanvas({
       x: (rect.width / 2) - ((minX + maxX) / 2) * newZoom,
       y: (rect.height / 2) - ((minY + maxY) / 2) * newZoom,
     });
-  }, [screenshots]);
+  }, [screenshots, visuals]);
 
   // --- Pan (middle-click or space+drag) ---
   const handleMouseDown = useCallback((e) => {
@@ -174,7 +185,12 @@ export default function MoodboardCanvas({
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selectedId && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
           e.preventDefault();
-          onRemoveScreenshot(selectedId);
+          const isScreenshot = screenshots.some(s => s.id === selectedId);
+          if (isScreenshot) {
+            onRemoveScreenshot(selectedId);
+          } else {
+            onRemoveVisual?.(selectedId);
+          }
           onSelect(null);
         }
       }
@@ -269,7 +285,30 @@ export default function MoodboardCanvas({
             zoom={zoom}
           />
         ))}
+        {visuals.filter(v => v && v.id).map((v) => (
+          <VisualCard
+            key={v.id}
+            visual={v}
+            isSelected={selectedId === v.id}
+            onSelect={() => onSelect(v.id)}
+            onUpdate={(updates) => onUpdateVisual(v.id, updates)}
+            onRemove={() => onRemoveVisual(v.id)}
+            onRegenerate={() => onOpenGeminiModal?.()}
+            designSystem={designSystem}
+            zoom={zoom}
+          />
+        ))}
       </div>
+
+      {/* Place visual overlay */}
+      {isPlacingVisual && (
+        <PlaceVisualMode
+          pan={pan}
+          zoom={zoom}
+          onPlace={onPlaceVisual}
+          onCancel={onCancelPlace}
+        />
+      )}
 
       {/* Canvas toolbar */}
       <CanvasToolbar
@@ -279,6 +318,7 @@ export default function MoodboardCanvas({
         onZoomReset={zoomReset}
         onFitToScreen={fitToScreen}
         onUpload={() => fileInputRef.current?.click()}
+        onAddVisual={onOpenGeminiModal}
         screenshotCount={screenshots.length}
       />
 
@@ -306,16 +346,24 @@ export default function MoodboardCanvas({
               extract colors, and build a complete design system.
             </p>
 
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="mx-auto mb-6 px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors flex items-center gap-2"
-            >
-              <Upload size={18} /> Upload Screenshots
-            </button>
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors flex items-center gap-2"
+              >
+                <Upload size={18} /> Upload Screenshots
+              </button>
+              <button
+                onClick={onOpenGeminiModal}
+                className="px-6 py-3 bg-surface border border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-colors flex items-center gap-2"
+              >
+                <Wand2 size={18} /> AI Visual
+              </button>
+            </div>
 
             <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-8">
               <Clipboard size={14} />
-              <span>Or paste a screenshot <kbd className="px-1.5 py-0.5 bg-surface-lighter rounded text-xs font-mono">⌘V</kbd></span>
+              <span>Or paste a screenshot <kbd className="px-1.5 py-0.5 bg-surface-lighter rounded text-xs font-mono">⌘V</kbd> / <kbd className="px-1.5 py-0.5 bg-surface-lighter rounded text-xs font-mono">Ctrl+V</kbd></span>
             </div>
 
             <div className="flex flex-wrap gap-3 justify-center text-sm text-text-muted">

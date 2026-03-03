@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Download, FileJson, FileText, Code, Check } from 'lucide-react';
+import { Download, FileJson, FileText, Code, Package, Check } from 'lucide-react';
 import { exportPBITheme, exportFormatSpec, exportPBIPConfig } from '../lib/themeExporter';
+import { exportPBIPVisuals } from '../lib/pbipExporter';
 
-export default function ExportPanel({ designSystem }) {
+export default function ExportPanel({ designSystem, visuals }) {
   const [copied, setCopied] = useState(null);
 
   const exports = [
@@ -32,10 +33,33 @@ export default function ExportPanel({ designSystem }) {
       filename: `visual-config.json`,
       mimeType: 'application/json',
       generate: () => exportPBIPConfig(designSystem)
+    },
+    {
+      id: 'pbip-visuals',
+      label: 'PBIP Visual Definitions',
+      desc: 'AI-generated visual.json files for PBIP projects (zip)',
+      icon: Package,
+      filename: `${designSystem.name.replace(/\s+/g, '-').toLowerCase()}-visuals.zip`,
+      mimeType: 'application/zip',
+      generate: null,
     }
   ];
 
-  const download = (exp) => {
+  const download = async (exp) => {
+    if (exp.id === 'pbip-visuals') {
+      try {
+        const blob = await exportPBIPVisuals(visuals || [], designSystem);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = exp.filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('PBIP visual export failed:', e);
+      }
+      return;
+    }
     const content = exp.generate();
     const blob = new Blob([content], { type: exp.mimeType });
     const url = URL.createObjectURL(blob);

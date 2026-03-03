@@ -1,10 +1,14 @@
-import { ZoomIn, ZoomOut, Maximize, RotateCcw, Plus } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, RotateCcw, Plus, BarChart2 } from 'lucide-react';
 
-export default function CanvasToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, onFitToScreen, onUpload, screenshotCount }) {
+export default function CanvasToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, onFitToScreen, onUpload, onAddVisual, screenshotCount }) {
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-surface-light/90 backdrop-blur-xl border border-surface-lighter rounded-full px-2 py-1.5 shadow-lg">
       <ToolButton onClick={onUpload} title="Add screenshots">
         <Plus size={16} />
+      </ToolButton>
+
+      <ToolButton onClick={onAddVisual} title="AI Visual">
+        <BarChart2 size={16} />
       </ToolButton>
 
       <div className="w-px h-5 bg-surface-lighter mx-1" />
