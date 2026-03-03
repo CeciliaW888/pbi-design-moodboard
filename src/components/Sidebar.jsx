@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
-import { Home, FolderOpen, LayoutTemplate, BookOpen, ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, FolderOpen, LayoutTemplate, BookOpen, ChevronLeft, ChevronRight, Plus, Users, Check } from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', Icon: Home },
@@ -8,8 +9,29 @@ const NAV_ITEMS = [
   { id: 'resources', label: 'Resources', Icon: BookOpen },
 ];
 
-export default function Sidebar({ collapsed, onToggle, currentView, onNavigate, user }) {
+export default function Sidebar({
+  collapsed,
+  onToggle,
+  currentView,
+  onNavigate,
+  user,
+  workspaces = [],
+  activeWorkspaceId,
+  onSelectWorkspace,
+  onCreateWorkspace,
+}) {
   const width = collapsed ? 60 : 260;
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
+
+  const handleCreateSubmit = () => {
+    const name = newWorkspaceName.trim();
+    if (name) {
+      onCreateWorkspace?.(name);
+    }
+    setNewWorkspaceName('');
+    setCreatingWorkspace(false);
+  };
 
   return (
     <motion.aside
@@ -75,21 +97,82 @@ export default function Sidebar({ collapsed, onToggle, currentView, onNavigate, 
         })}
       </nav>
 
-      {/* Workspaces section (placeholder for Phase 2) */}
+      {/* Workspaces section */}
       <div className="border-t border-surface-lighter p-2">
         {!collapsed && (
           <div className="px-3 py-2">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Workspaces</span>
-              <button className="p-0.5 text-text-muted hover:text-primary transition-colors" title="Create workspace">
+              <button
+                onClick={() => setCreatingWorkspace(true)}
+                className="p-0.5 text-text-muted hover:text-primary transition-colors"
+                title="Create workspace"
+              >
                 <Plus size={14} />
               </button>
             </div>
-            <div className="space-y-1">
-              <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors">
-                <Users size={14} className="flex-shrink-0" />
-                <span className="truncate">Personal</span>
-              </button>
+
+            <div className="space-y-0.5 max-h-40 overflow-y-auto">
+              {workspaces.map((ws) => {
+                const isActive = ws.id === activeWorkspaceId;
+                return (
+                  <button
+                    key={ws.id}
+                    onClick={() => onSelectWorkspace?.(ws.id)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors ${
+                      isActive
+                        ? 'text-primary bg-primary/10'
+                        : 'text-text-muted hover:text-text hover:bg-surface'
+                    }`}
+                  >
+                    <Users size={14} className="flex-shrink-0" />
+                    <span className="truncate flex-1 text-left">{ws.name}</span>
+                    {(ws.members?.length || 0) > 1 && (
+                      <span className="text-[10px] text-text-muted/60 flex-shrink-0">
+                        {ws.members.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {workspaces.length === 0 && !creatingWorkspace && (
+                <p className="text-xs text-text-muted/50 text-center py-2">No workspaces</p>
+              )}
+
+              {/* Inline create workspace */}
+              <AnimatePresence>
+                {creatingWorkspace && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex items-center gap-1 mt-1">
+                      <input
+                        autoFocus
+                        value={newWorkspaceName}
+                        onChange={(e) => setNewWorkspaceName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleCreateSubmit();
+                          if (e.key === 'Escape') { setCreatingWorkspace(false); setNewWorkspaceName(''); }
+                        }}
+                        onBlur={() => { if (!newWorkspaceName.trim()) setCreatingWorkspace(false); }}
+                        placeholder="Workspace name..."
+                        className="flex-1 bg-surface border border-surface-lighter rounded px-2 py-1 text-xs text-text outline-none focus:border-primary min-w-0"
+                      />
+                      <button
+                        onClick={handleCreateSubmit}
+                        disabled={!newWorkspaceName.trim()}
+                        className="p-1 text-primary hover:bg-primary/10 rounded transition-colors disabled:opacity-30"
+                      >
+                        <Check size={14} />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         )}

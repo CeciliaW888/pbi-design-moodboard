@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, where, arrayUnion, arrayRemove, writeBatch, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Replace with your Firebase config from Firebase Console
@@ -77,6 +77,140 @@ export async function duplicateMoodboard(userId, moodboardId) {
     updatedAt: serverTimestamp(),
   });
   return newId;
+}
+
+// ═══════════════════════════════════════════════════════
+// Workspace operations (Phase 2)
+// ═══════════════════════════════════════════════════════
+
+export async function createWorkspace(userId, name) {
+  const id = crypto.randomUUID();
+  await setDoc(doc(db, 'workspaces', id), {
+    id,
+    name,
+    ownerId: userId,
+    members: [userId],
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return id;
+}
+
+export async function getUserWorkspaces(userId) {
+  const q = query(
+    collection(db, 'workspaces'),
+    where('members', 'array-contains', userId)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getWorkspaceProjects(workspaceId) {
+  const q = query(
+    collection(db, 'workspaces', workspaceId, 'projects'),
+    orderBy('updatedAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function saveWorkspaceProject(workspaceId, project) {
+  const id = project.id || crypto.randomUUID();
+  await setDoc(doc(db, 'workspaces', workspaceId, 'projects', id), {
+    ...project,
+    id,
+    updatedAt: serverTimestamp(),
+    createdAt: project.createdAt || serverTimestamp(),
+  });
+  return id;
+}
+
+export async function deleteWorkspaceProject(workspaceId, projectId) {
+  await deleteDoc(doc(db, 'workspaces', workspaceId, 'projects', projectId));
+}
+
+export async function renameWorkspaceProject(workspaceId, projectId, newName) {
+  await updateDoc(doc(db, 'workspaces', workspaceId, 'projects', projectId), {
+    name: newName,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function duplicateWorkspaceProject(workspaceId, projectId) {
+  const docSnap = await getDoc(doc(db, 'workspaces', workspaceId, 'projects', projectId));
+  if (!docSnap.exists()) throw new Error('Project not found');
+  const data = docSnap.data();
+  const newId = crypto.randomUUID();
+  await setDoc(doc(db, 'workspaces', workspaceId, 'projects', newId), {
+    ...data,
+    id: newId,
+    name: `${data.name || 'Untitled'} (Copy)`,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return newId;
+}
+
+export async function addWorkspaceMember(workspaceId, userId) {
+  await updateDoc(doc(db, 'workspaces', workspaceId), {
+    members: arrayUnion(userId),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function removeWorkspaceMember(workspaceId, userId) {
+  await updateDoc(doc(db, 'workspaces', workspaceId), {
+    members: arrayRemove(userId),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function updateWorkspace(workspaceId, updates) {
+  await updateDoc(doc(db, 'workspaces', workspaceId), {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// Real-time listeners (Phase 3)
+// ═══════════════════════════════════════════════════════
+
+export function subscribeToProject(workspaceId, projectId, callback) {
+  return onSnapshot(
+    doc(db, 'workspaces', workspaceId, 'projects', projectId),
+    (snap) => {
+      if (snap.exists()) {
+        callback({ id: snap.id, ...snap.data() });
+      }
+    }
+  );
+}
+
+export function subscribeToPresence(workspaceId, projectId, callback) {
+  return onSnapshot(
+    collection(db, 'workspaces', workspaceId, 'projects', projectId, 'presence'),
+    (snap) => {
+      const users = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      callback(users);
+    }
+  );
+}
+
+export async function setPresence(workspaceId, projectId, userId, userData) {
+  await setDoc(
+    doc(db, 'workspaces', workspaceId, 'projects', projectId, 'presence', userId),
+    {
+      ...userData,
+      lastSeen: serverTimestamp(),
+    }
+  );
+}
+
+export async function removePresence(workspaceId, projectId, userId) {
+  await deleteDoc(
+    doc(db, 'workspaces', workspaceId, 'projects', projectId, 'presence', userId)
+  );
 }
 
 // Storage operations

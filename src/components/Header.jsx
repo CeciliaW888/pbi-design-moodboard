@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { LogOut, User, Sun, Moon, Settings, ExternalLink, Key, Menu, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import PresenceAvatars from './PresenceAvatars';
 
 export default function Header({
   user,
@@ -12,10 +13,11 @@ export default function Header({
   onToggleTheme,
   geminiApiKey,
   onGeminiApiKeyChange,
-  // New props for sidebar integration
   currentView,
   onGoHome,
   onToggleSidebar,
+  // Phase 3: presence
+  activeUsers = [],
 }) {
   const [showSettings, setShowSettings] = useState(false);
   const settingsRef = useRef(null);
@@ -82,6 +84,11 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Presence avatars — editor only */}
+        {isEditor && activeUsers.length > 0 && (
+          <PresenceAvatars users={activeUsers} currentUserId={user?.uid} />
+        )}
+
         {/* Settings gear — only show in editor */}
         {isEditor && (
           <div ref={settingsRef} className="relative">

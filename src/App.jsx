@@ -1,9 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { loadState, saveState, saveProjectState, loadProjectState, setActiveProject, getActiveProject, getAllLocalProjects, deleteProjectState } from './lib/storage';
+import { loadState, saveState, saveProjectState, setActiveProject, deleteProjectState } from './lib/storage';
 import { extractColors, analyzePalette } from './lib/colorExtractor';
-import { auth, onAuthStateChanged, signInWithGoogle, signInEmail, signUpEmail, logOut, saveMoodboard, getUserMoodboards, getRecentMoodboards, deleteMoodboard, renameMoodboard, duplicateMoodboard } from './firebase';
+import {
+  auth, onAuthStateChanged, logOut,
+  saveMoodboard, getUserMoodboards, getRecentMoodboards, deleteMoodboard, renameMoodboard, duplicateMoodboard,
+  // Phase 2: workspace functions
+  createWorkspace, getUserWorkspaces, getWorkspaceProjects, saveWorkspaceProject,
+  deleteWorkspaceProject, renameWorkspaceProject, duplicateWorkspaceProject,
+} from './firebase';
 import { TEMPLATES, createProjectFromTemplate, getTemplateById } from './lib/templates';
+import { migrateUserToWorkspaces, ensurePersonalWorkspace } from './lib/migration';
+import { useRealtimeProject } from './hooks/useRealtimeProject';
+import { usePresence } from './hooks/usePresence';
+import { useDebouncedSync } from './hooks/useDebouncedSync';
 import MoodboardCanvas from './components/MoodboardCanvas';
 import ColorPalette from './components/ColorPalette';
 import DesignPanel from './components/DesignPanel';
@@ -47,9 +57,13 @@ function computePosition(existingCount) {
 
 export default function App() {
   // --- View & navigation state ---
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'editor' | 'templates' | 'projects'
+  const [currentView, setCurrentView] = useState('home');
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // --- Workspace state (Phase 2) ---
+  const [workspaces, setWorkspaces] = useState([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
 
   // --- Editor state ---
   const [state, setState] = useState(() => loadState() || { ...DEFAULT_STATE });
@@ -68,35 +82,112 @@ export default function App() {
   );
   const { theme, toggleTheme } = useTheme();
 
+  // --- Phase 3: Real-time collaboration ---
+  const isInEditor = currentView === 'editor';
+  const { projectData, loading: rtLoading, isLocalUpdate } = useRealtimeProject(
+    isInEditor ? activeWorkspaceId : null,
+    isInEditor ? currentProjectId : null
+  );
+  const activeUsers = usePresence(
+    isInEditor ? activeWorkspaceId : null,
+    isInEditor ? currentProjectId : null,
+    user
+  );
+  const syncToFirestore = useDebouncedSync(
+    isInEditor ? activeWorkspaceId : null,
+    isInEditor ? currentProjectId : null,
+    isLocalUpdate
+  );
+
+  // --- Merge remote real-time updates (Phase 3) ---
+  const prevProjectDataRef = useRef(null);
+  useEffect(() => {
+    if (!projectData || !isInEditor) return;
+    // Skip if this is the same data we already have
+    if (prevProjectDataRef.current === projectData) return;
+    prevProjectDataRef.current = projectData;
+    // Merge remote changes into local state (remote wins for non-screenshot fields)
+    setState(prev => ({
+      ...prev,
+      ...projectData,
+      // Keep local screenshots (they have dataUrls that Firestore doesn't)
+      screenshots: prev.screenshots,
+    }));
+  }, [projectData, isInEditor]);
+
   // --- Persist editor state ---
   useEffect(() => {
     try {
       saveState(state);
       if (currentProjectId) {
         saveProjectState(currentProjectId, state);
+        // Phase 3: debounced sync to Firestore
+        if (activeWorkspaceId) {
+          syncToFirestore(state);
+        }
       }
     } catch (e) { console.warn('[App] saveState failed:', e); }
-  }, [state, currentProjectId]);
+  }, [state, currentProjectId, activeWorkspaceId, syncToFirestore]);
 
-  // --- Auth ---
+  // --- Auth + workspace init ---
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u) loadLibrary(u.uid);
+      if (u) {
+        await initWorkspaces(u.uid);
+      } else {
+        setWorkspaces([]);
+        setActiveWorkspaceId(null);
+        setSavedLibrary([]);
+      }
     });
     return unsub;
   }, []);
 
-  async function loadLibrary(uid) {
+  async function initWorkspaces(uid) {
     try {
-      const boards = await getRecentMoodboards(uid, 20);
-      setSavedLibrary(boards);
+      // Run migration if needed
+      await migrateUserToWorkspaces(uid);
+
+      // Load workspaces
+      let ws = await getUserWorkspaces(uid);
+
+      // Ensure personal workspace exists
+      if (ws.length === 0) {
+        const personalId = await ensurePersonalWorkspace(uid, ws);
+        ws = await getUserWorkspaces(uid);
+      }
+
+      setWorkspaces(ws);
+
+      // Set active workspace to first one (personal)
+      const firstWs = ws[0];
+      if (firstWs) {
+        setActiveWorkspaceId(firstWs.id);
+        // Load projects for this workspace
+        await loadWorkspaceProjects(firstWs.id);
+      }
     } catch (e) {
-      // Fallback to getUserMoodboards if ordering not supported
+      console.warn('[App] Workspace init failed, falling back to legacy:', e);
+      // Fallback: load from legacy path
       try {
-        const boards = await getUserMoodboards(uid);
+        const boards = await getRecentMoodboards(uid, 20);
         setSavedLibrary(boards);
-      } catch (e2) { console.warn('Could not load library:', e2); }
+      } catch (e2) {
+        try {
+          const boards = await getUserMoodboards(uid);
+          setSavedLibrary(boards);
+        } catch (e3) { console.warn('Could not load library:', e3); }
+      }
+    }
+  }
+
+  async function loadWorkspaceProjects(workspaceId) {
+    try {
+      const projects = await getWorkspaceProjects(workspaceId);
+      setSavedLibrary(projects);
+    } catch (e) {
+      console.warn('[App] loadWorkspaceProjects failed:', e);
     }
   }
 
@@ -116,11 +207,9 @@ export default function App() {
   }, []);
 
   const handleOpenProject = useCallback((project) => {
-    // Load project state into editor
     const projectState = {
       ...DEFAULT_STATE,
       ...project,
-      // Strip Firestore metadata
       id: project.id,
     };
     setState(projectState);
@@ -130,18 +219,26 @@ export default function App() {
     setSelectedId(null);
   }, []);
 
-  const handleNewProject = useCallback(() => {
+  const handleNewProject = useCallback(async () => {
     const newId = crypto.randomUUID();
     const newState = { ...DEFAULT_STATE, id: newId, name: 'Untitled Project', createdAt: Date.now(), updatedAt: Date.now() };
     setState(newState);
     setCurrentProjectId(newId);
     setActiveProject(newId);
     saveProjectState(newId, newState);
+
+    // Save to workspace if available
+    if (activeWorkspaceId && user) {
+      try {
+        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
+      } catch (e) { console.warn('Could not save new project to workspace:', e); }
+    }
+
     setCurrentView('editor');
     setSelectedId(null);
-  }, []);
+  }, [activeWorkspaceId, user]);
 
-  const handleUseTemplate = useCallback((templateId) => {
+  const handleUseTemplate = useCallback(async (templateId) => {
     const template = getTemplateById(templateId);
     if (!template) return;
     const project = createProjectFromTemplate(template);
@@ -149,57 +246,106 @@ export default function App() {
     setCurrentProjectId(project.id);
     setActiveProject(project.id);
     saveProjectState(project.id, project);
+
+    if (activeWorkspaceId && user) {
+      try {
+        await saveWorkspaceProject(activeWorkspaceId, project);
+      } catch (e) { console.warn('Could not save template project to workspace:', e); }
+    }
+
     setCurrentView('editor');
     setSelectedId(null);
-  }, []);
+  }, [activeWorkspaceId, user]);
 
-  const handlePromptGenerate = useCallback((promptText) => {
-    // Create a new project and open the Gemini modal with the prompt
+  const handlePromptGenerate = useCallback(async (promptText) => {
     const newId = crypto.randomUUID();
     const newState = { ...DEFAULT_STATE, id: newId, name: promptText.slice(0, 40), createdAt: Date.now(), updatedAt: Date.now() };
     setState(newState);
     setCurrentProjectId(newId);
     setActiveProject(newId);
     saveProjectState(newId, newState);
+
+    if (activeWorkspaceId && user) {
+      try {
+        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
+      } catch (e) { console.warn('Could not save project to workspace:', e); }
+    }
+
     setCurrentView('editor');
     setSelectedId(null);
-    // Open Gemini modal after view switch
     setTimeout(() => setShowGeminiModal(true), 100);
+  }, [activeWorkspaceId, user]);
+
+  // --- Workspace management ---
+  const handleCreateWorkspace = useCallback(async (name) => {
+    if (!user) return;
+    try {
+      const id = await createWorkspace(user.uid, name);
+      const ws = await getUserWorkspaces(user.uid);
+      setWorkspaces(ws);
+      setActiveWorkspaceId(id);
+      await loadWorkspaceProjects(id);
+    } catch (e) { console.warn('Create workspace failed:', e); }
+  }, [user]);
+
+  const handleSelectWorkspace = useCallback(async (workspaceId) => {
+    setActiveWorkspaceId(workspaceId);
+    await loadWorkspaceProjects(workspaceId);
   }, []);
 
-  // --- Project CRUD ---
+  // --- Project CRUD (workspace-aware) ---
   const handleRenameProject = useCallback(async (projectId, newName) => {
+    if (activeWorkspaceId && user) {
+      try {
+        await renameWorkspaceProject(activeWorkspaceId, projectId, newName);
+        await loadWorkspaceProjects(activeWorkspaceId);
+        return;
+      } catch (e) { console.warn('Workspace rename failed, trying legacy:', e); }
+    }
     if (user) {
       try {
         await renameMoodboard(user.uid, projectId, newName);
-        await loadLibrary(user.uid);
       } catch (e) { console.warn('Rename failed:', e); }
     }
-    // Also update local
     setSavedLibrary(prev => prev.map(p => p.id === projectId ? { ...p, name: newName } : p));
-  }, [user]);
+  }, [user, activeWorkspaceId]);
 
   const handleDuplicateProject = useCallback(async (projectId) => {
+    if (activeWorkspaceId && user) {
+      try {
+        await duplicateWorkspaceProject(activeWorkspaceId, projectId);
+        await loadWorkspaceProjects(activeWorkspaceId);
+        return;
+      } catch (e) { console.warn('Workspace duplicate failed, trying legacy:', e); }
+    }
     if (user) {
       try {
         await duplicateMoodboard(user.uid, projectId);
-        await loadLibrary(user.uid);
+        const boards = await getUserMoodboards(user.uid);
+        setSavedLibrary(boards);
       } catch (e) { console.warn('Duplicate failed:', e); }
     }
-  }, [user]);
+  }, [user, activeWorkspaceId]);
 
   const handleDeleteProject = useCallback(async (projectId) => {
+    if (activeWorkspaceId && user) {
+      try {
+        await deleteWorkspaceProject(activeWorkspaceId, projectId);
+        await loadWorkspaceProjects(activeWorkspaceId);
+        deleteProjectState(projectId);
+        return;
+      } catch (e) { console.warn('Workspace delete failed, trying legacy:', e); }
+    }
     if (user) {
       try {
         await deleteMoodboard(user.uid, projectId);
-        await loadLibrary(user.uid);
       } catch (e) { console.warn('Delete failed:', e); }
     }
     deleteProjectState(projectId);
     setSavedLibrary(prev => prev.filter(p => p.id !== projectId));
-  }, [user]);
+  }, [user, activeWorkspaceId]);
 
-  // --- Screenshot callbacks (unchanged) ---
+  // --- Screenshot callbacks ---
   const addScreenshots = useCallback((files) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -363,8 +509,15 @@ export default function App() {
         screenshots: state.screenshots.map(s => ({ ...s, dataUrl: undefined })),
         id: currentProjectId || state.id,
       };
-      await saveMoodboard(user.uid, toSave);
-      await loadLibrary(user.uid);
+      // Save to workspace if available, otherwise legacy
+      if (activeWorkspaceId) {
+        await saveWorkspaceProject(activeWorkspaceId, toSave);
+        await loadWorkspaceProjects(activeWorkspaceId);
+      } else {
+        await saveMoodboard(user.uid, toSave);
+        const boards = await getUserMoodboards(user.uid);
+        setSavedLibrary(boards);
+      }
     } catch (e) { console.error('Save failed:', e); }
   };
 
@@ -614,6 +767,7 @@ export default function App() {
         currentView={currentView}
         onGoHome={handleGoHome}
         onToggleSidebar={() => setSidebarCollapsed(c => !c)}
+        activeUsers={activeUsers}
       />
 
       <div className="flex-1 flex min-h-0">
@@ -625,6 +779,10 @@ export default function App() {
             currentView={currentView}
             onNavigate={handleNavigate}
             user={user}
+            workspaces={workspaces}
+            activeWorkspaceId={activeWorkspaceId}
+            onSelectWorkspace={handleSelectWorkspace}
+            onCreateWorkspace={handleCreateWorkspace}
           />
         )}
 
