@@ -258,6 +258,25 @@ export default function App() {
     setSelectedId(null);
   }, []);
 
+  const handleGoToMoodboard = useCallback(async () => {
+    // Create new project and go to moodboard/editor
+    const newId = crypto.randomUUID();
+    const newState = { ...DEFAULT_STATE, id: newId, name: 'Untitled Project', createdAt: Date.now(), updatedAt: Date.now() };
+    setState(newState);
+    setCurrentProjectId(newId);
+    setActiveProject(newId);
+    saveProjectState(newId, newState);
+
+    if (activeWorkspaceId && user) {
+      try {
+        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
+      } catch (e) { console.warn('Could not save new project to workspace:', e); }
+    }
+
+    setCurrentView('editor');
+    setSelectedId(null);
+  }, [activeWorkspaceId, user]);
+
   const handleNewPrototype = useCallback(async () => {
     const newId = crypto.randomUUID();
     const newState = {
@@ -908,6 +927,7 @@ export default function App() {
             projects={savedLibrary}
             onOpenProject={handleOpenProject}
             onNewProject={handleNewProject}
+            onGoToMoodboard={handleGoToMoodboard}
             onViewAll={handleNavigate}
             onPromptGenerate={handlePromptGenerate}
             onRenameProject={handleRenameProject}

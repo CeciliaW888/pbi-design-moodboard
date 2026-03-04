@@ -9,6 +9,7 @@ export default function HomeDashboard({
   projects,
   onOpenProject,
   onNewProject,
+  onGoToMoodboard,
   onViewAll,
   onRenameProject,
   onDuplicateProject,
@@ -42,7 +43,7 @@ export default function HomeDashboard({
             description="Upload image or paste URL to extract colors, fonts, and style"
             buttonText="Upload Image"
             buttonVariant="primary"
-            onClick={onNewProject}
+            onClick={onGoToMoodboard}
             delay={0}
           />
           <PathCard
@@ -100,9 +101,32 @@ export default function HomeDashboard({
             </div>
           ) : (
             <div className="text-center py-16 bg-surface-light border border-surface-lighter rounded-xl">
-              <DittoMascot size={64} className="mx-auto mb-3" />
-              <p className="text-sm font-medium text-text-muted">No projects yet</p>
-              <p className="text-xs text-text-muted/70 mt-1">Create your first project to get started</p>
+              <DittoMascot size={64} expression="wave" className="mx-auto mb-3" />
+              <p className="text-sm font-medium text-text mb-2">No projects yet</p>
+              <p className="text-xs text-text-muted/70 mb-4">Choose a starting point above to create your first project</p>
+              <div className="flex items-center justify-center gap-3 text-xs">
+                <button
+                  onClick={onGoToMoodboard}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
+                >
+                  <Palette size={14} />
+                  I Have Inspiration
+                </button>
+                <button
+                  onClick={() => onViewAll?.('gallery')}
+                  className="px-4 py-2 border border-surface-lighter text-text rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
+                >
+                  <LayoutTemplate size={14} />
+                  Browse Templates
+                </button>
+                <button
+                  onClick={onNewPrototype}
+                  className="px-4 py-2 border border-surface-lighter text-text rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
+                >
+                  <Zap size={14} />
+                  Start Blank
+                </button>
+              </div>
             </div>
           )}
         </motion.div>
