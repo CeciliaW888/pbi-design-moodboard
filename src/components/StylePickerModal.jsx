@@ -460,7 +460,7 @@ function TemplatePreview({ type, template, designSystem }) {
     case 'textbox': {
       if (template.callout) return (
         <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} style={{ background: bg }}>
-          <rect x="12" y="20" width={w - 24} height={h - 40} rx="6" fill={c1} opacity="0.06" stroke={c1} strokeWidth="1" opacity="0.2" />
+          <rect x="12" y="20" width={w - 24} height={h - 40} rx="6" fill={c1} opacity="0.06" stroke={c1} strokeWidth="1" strokeOpacity="0.2" />
           <rect x="12" y="20" width="4" height={h - 40} rx="2" fill={c1} />
           <text x="26" y="42" fontSize="10" fontWeight="600" fill={fg}>Note</text>
           <text x="26" y="58" fontSize="8" fill={muted}>Important: Key findings from</text>

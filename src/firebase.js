@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, OAuthProvider, GithubAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, orderBy, limit, where, arrayUnion, arrayRemove, writeBatch, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -19,10 +19,15 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 const googleProvider = new GoogleAuthProvider();
+const microsoftProvider = new OAuthProvider('microsoft.com');
+const githubProvider = new GithubAuthProvider();
 
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const signInWithMicrosoft = () => signInWithPopup(auth, microsoftProvider);
+export const signInWithGithub = () => signInWithPopup(auth, githubProvider);
 export const signInEmail = (email, password) => signInWithEmailAndPassword(auth, email, password);
 export const signUpEmail = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+export const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 export const logOut = () => signOut(auth);
 export { onAuthStateChanged };
 

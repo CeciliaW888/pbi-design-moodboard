@@ -146,6 +146,33 @@ export default function App() {
     return unsub;
   }, []);
 
+  // --- Handle shared link URL params ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wsParam = params.get('ws');
+    const projectParam = params.get('project');
+    if (wsParam && projectParam) {
+      setActiveWorkspaceId(wsParam);
+      setCurrentProjectId(projectParam);
+      // Try to load the project - we'll determine type after loading
+      getWorkspaceProjects(wsParam).then(projects => {
+        const project = projects.find(p => p.id === projectParam);
+        if (project) {
+          setState(prev => ({ ...prev, ...project }));
+          setCurrentView(project.type === 'prototype' ? 'prototype' : 'editor');
+        } else {
+          // Project exists in Firestore but not in the projects list - open as prototype
+          setCurrentView('prototype');
+        }
+      }).catch(() => {
+        // Still open the editor - real-time listener will sync data
+        setCurrentView('prototype');
+      });
+      // Clean URL without reloading
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   async function initWorkspaces(uid) {
     try {
       // Run migration if needed
@@ -894,6 +921,9 @@ export default function App() {
         onGoHome={handleGoHome}
         onToggleSidebar={() => setSidebarCollapsed(c => !c)}
         activeUsers={activeUsers}
+        workspaceId={activeWorkspaceId}
+        projectId={currentProjectId}
+        onSave={handleSaveToLibrary}
       />
 
       <div className="flex-1 flex min-h-0 overflow-hidden">
