@@ -178,7 +178,7 @@ function HeroIllustration({ t }) {
             </div>
             <div className="flex-1 flex justify-center">
               <div className={`px-5 py-[3px] ${t.addressBg} rounded-md text-[11px] ${t.addressText} font-mono tracking-wide`}>
-                pbi-design-moodboard.app
+                ditto.design
               </div>
             </div>
             <div className="w-[52px]" /> {/* spacer to center address bar */}
@@ -557,7 +557,7 @@ export default function LandingPage({ onEnterApp }) {
                 <rect x="14" y="3" width="4" height="15" rx="1" fill="white" opacity="0.7" />
               </svg>
             </div>
-            <span className={`font-bold text-[14px] ${t.brandText} hidden sm:block`}>PBI Design Moodboard</span>
+            <span className={`font-bold text-[14px] ${t.brandText} hidden sm:block`}>Ditto</span>
           </button>
 
           {/* Desktop links */}
@@ -837,7 +837,7 @@ export default function LandingPage({ onEnterApp }) {
             badge="Compare"
             title="See How We"
             highlight="Stack Up"
-            description="PBI Design Moodboard vs. the most popular Power BI theming tools on the market."
+            description="Ditto vs. the most popular Power BI theming tools on the market."
             t={t}
           />
 
@@ -934,7 +934,7 @@ export default function LandingPage({ onEnterApp }) {
                 <rect x="14" y="3" width="4" height="15" rx="1" fill="white" opacity="0.7" />
               </svg>
             </div>
-            <span className={`text-[13px] ${t.footerText} font-medium`}>PBI Design Moodboard</span>
+            <span className={`text-[13px] ${t.footerText} font-medium`}>Ditto</span>
           </div>
 
           <div className={`flex items-center gap-6 text-[12px] ${t.faint}`}>

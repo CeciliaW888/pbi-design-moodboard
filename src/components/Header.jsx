@@ -73,11 +73,11 @@ export default function Header({
               onChange={(e) => onNameChange(e.target.value)}
               className="bg-transparent text-lg font-bold text-text outline-none border-b border-transparent hover:border-surface-lighter focus:border-primary transition-colors w-64"
             />
-            <p className="text-xs text-text-muted">Power BI Design Moodboard</p>
+            <p className="text-xs text-text-muted">AI Design Studio for Power BI</p>
           </div>
         ) : (
           <div>
-            <h1 className="text-lg font-bold text-text">PBI Moodboard</h1>
+            <h1 className="text-lg font-bold text-text">Ditto</h1>
             <p className="text-xs text-text-muted">Power BI Design System</p>
           </div>
         )}
