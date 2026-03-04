@@ -1,14 +1,7 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Plus, LayoutTemplate, ArrowRight, Search, BarChart3, TrendingUp, PieChart, Monitor } from 'lucide-react';
+import { Palette, LayoutTemplate, Zap, ArrowRight, Search } from 'lucide-react';
 import ProjectCard from './ProjectCard';
-import { TEMPLATES } from '../lib/templates';
-
-const TEMPLATE_CHIPS = [
-  { id: 'template-financial-report', label: 'Financial Report', Icon: BarChart3 },
-  { id: 'template-marketing-dashboard', label: 'Marketing Dashboard', Icon: TrendingUp },
-  { id: 'template-sales-analysis', label: 'Sales Analysis', Icon: PieChart },
-];
+import PathCard from './PathCard';
 
 export default function HomeDashboard({
   user,
@@ -16,22 +9,12 @@ export default function HomeDashboard({
   onOpenProject,
   onNewProject,
   onViewAll,
-  onPromptGenerate,
   onRenameProject,
   onDuplicateProject,
   onDeleteProject,
   onUseTemplate,
   onNewPrototype,
 }) {
-  const [promptText, setPromptText] = useState('');
-
-  const handlePromptSubmit = (e) => {
-    e.preventDefault();
-    if (!promptText.trim()) return;
-    onPromptGenerate?.(promptText.trim());
-    setPromptText('');
-  };
-
   const recentProjects = (projects || []).slice(0, 6);
 
   return (
@@ -41,104 +24,47 @@ export default function HomeDashboard({
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-10"
         >
           <h1 className="text-2xl font-bold text-text">
             Welcome back{user?.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}
           </h1>
-          <p className="text-text-muted mt-1">Design your next Power BI masterpiece</p>
+          <p className="text-text-muted mt-1">What would you like to create?</p>
         </motion.div>
 
-        {/* Prompt bar */}
-        <motion.form
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          onSubmit={handlePromptSubmit}
-          className="relative mb-6"
-        >
-          <div className="flex items-center gap-3 bg-surface-light border border-surface-lighter rounded-2xl px-4 py-3 focus-within:border-primary/50 transition-colors shadow-sm">
-            <Sparkles size={18} className="text-primary flex-shrink-0" />
-            <input
-              type="text"
-              value={promptText}
-              onChange={(e) => setPromptText(e.target.value)}
-              placeholder="Describe your dashboard theme... e.g. 'Modern dark sales dashboard with blue accents'"
-              className="flex-1 bg-transparent outline-none text-sm text-text placeholder:text-text-muted/60"
-            />
-            <button
-              type="submit"
-              disabled={!promptText.trim()}
-              className="px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Generate
-            </button>
-          </div>
-        </motion.form>
-
-        {/* Quick template chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex flex-wrap gap-2 mb-10"
-        >
-          {TEMPLATE_CHIPS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => onUseTemplate?.(id)}
-              className="flex items-center gap-2 px-4 py-2 bg-surface border border-surface-lighter rounded-full text-sm text-text-muted hover:text-text hover:border-primary/30 transition-all"
-            >
-              <Icon size={14} />
-              {label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* Get Started cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
-        >
-          <button
+        {/* Three path cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          <PathCard
+            icon={Palette}
+            iconGradient="from-blue-500 to-blue-600"
+            title='I Have Inspiration'
+            description="Upload image or paste URL to extract colors, fonts, and style"
+            buttonText="Upload Image"
+            buttonVariant="primary"
             onClick={onNewProject}
-            className="group flex items-center gap-4 p-5 bg-surface-light border border-surface-lighter rounded-xl hover:border-primary/30 hover:shadow-lg transition-all text-left"
-          >
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-              <Plus size={24} className="text-primary" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-text">New Moodboard</h3>
-              <p className="text-xs text-text-muted mt-0.5">Build your design system with screenshots and palettes</p>
-            </div>
-          </button>
-          <button
+            delay={0}
+          />
+          <PathCard
+            icon={LayoutTemplate}
+            iconGradient="from-purple-500 to-purple-600"
+            title='I Want a Template'
+            description="Browse 12 curated dashboard themes and customize for your brand"
+            buttonText="Browse Templates"
+            buttonVariant="outline"
+            onClick={() => onViewAll?.('gallery')}
+            delay={0.05}
+          />
+          <PathCard
+            icon={Zap}
+            iconGradient="from-yellow-400 to-yellow-500"
+            title='Start Blank'
+            description="Create from scratch with AI or manual design"
+            buttonText="Create"
+            buttonVariant="outline"
             onClick={onNewPrototype}
-            className="group flex items-center gap-4 p-5 bg-surface-light border border-surface-lighter rounded-xl hover:border-primary/30 hover:shadow-lg transition-all text-left"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#00B294]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#00B294]/20 transition-colors">
-              <Monitor size={24} className="text-[#00B294]" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-text">New Prototype</h3>
-              <p className="text-xs text-text-muted mt-0.5">Wireframe a Power BI report and export as PBIR</p>
-            </div>
-          </button>
-          <button
-            onClick={() => onViewAll?.('templates')}
-            className="group flex items-center gap-4 p-5 bg-surface-light border border-surface-lighter rounded-xl hover:border-primary/30 hover:shadow-lg transition-all text-left"
-          >
-            <div className="w-12 h-12 rounded-xl bg-[#6C5CE7]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#6C5CE7]/20 transition-colors">
-              <LayoutTemplate size={24} className="text-[#6C5CE7]" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-text">Explore Templates</h3>
-              <p className="text-xs text-text-muted mt-0.5">Start with a curated design system and customize it</p>
-            </div>
-          </button>
-        </motion.div>
+            delay={0.1}
+          />
+        </div>
 
         {/* Recent Projects */}
         <motion.div
