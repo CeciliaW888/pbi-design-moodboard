@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, Palette, Type, Download, Image, Eye, Code2,
-  ArrowRight, Check, X, Minus, Github, ChevronDown, Menu,
+  ArrowRight, Check, X, Minus, ChevronDown, Menu,
   X as XClose, TrendingUp, Layers, MousePointerClick, Zap,
   Sun, Moon
 } from 'lucide-react';
@@ -564,8 +564,8 @@ export default function LandingPage({ onEnterApp }) {
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-1">
             {[
-              { id: 'features', label: 'Features' },
               { id: 'how-it-works', label: 'How It Works' },
+              { id: 'features', label: 'Features' },
               { id: 'compare', label: 'Compare' },
             ].map(({ id, label }) => (
               <button
@@ -680,7 +680,7 @@ export default function LandingPage({ onEnterApp }) {
               className={`text-[16px] sm:text-[18px] ${t.body} max-w-[540px] mx-auto mb-9 leading-[1.7]`}
             >
               Stop guessing what your dashboard will look like. Ditto uses Gemini&nbsp;AI to generate
-              realistic bar&nbsp;charts, KPIs, donuts &amp; tables with real business data &mdash; then lets you
+              realistic bar&nbsp;charts, KPIs, donuts &amp; tables with realistic sample data &mdash; then lets you
               preview your theme on live visuals and export production&#8209;ready Power&nbsp;BI themes instantly.
             </motion.p>
 
@@ -790,7 +790,7 @@ export default function LandingPage({ onEnterApp }) {
             t={t}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <FeatureCard
               title="AI Visual Generation"
               description="One click and Gemini AI generates a full dashboard — bar charts, KPIs, donut charts, data tables — populated with realistic business data, styled to your palette. Not wireframes. Real visuals."
@@ -801,12 +801,21 @@ export default function LandingPage({ onEnterApp }) {
               t={t}
             />
             <FeatureCard
-              title="Live Preview"
-              description="See your theme applied to actual interactive charts as you design. Change a color, watch every visual update instantly. No more export-check-tweak-repeat cycles."
+              title="Live Preview & Prototyping"
+              description="See your theme applied to actual interactive charts as you design. Change a color, watch every visual update instantly. Build full prototypes with drag-and-drop visuals."
               icon={Eye}
               accentBg="bg-[#28c840]/[0.12]"
               accentText="text-[#4ade80]"
               delay={0.08}
+              t={t}
+            />
+            <FeatureCard
+              title="Real-Time Collaboration"
+              description="Share a link and collaborate in real-time. See who's viewing, edit together, and watch changes sync instantly. No version conflicts, no email ping-pong."
+              icon={MousePointerClick}
+              accentBg="bg-[#fb923c]/[0.12]"
+              accentText="text-[#fb923c]"
+              delay={0.16}
               t={t}
             />
             <FeatureCard
@@ -815,7 +824,7 @@ export default function LandingPage({ onEnterApp }) {
               icon={Palette}
               accentBg="bg-[#0078D4]/[0.12]"
               accentText="text-[#4da8ff]"
-              delay={0.16}
+              delay={0.24}
               t={t}
             />
             <FeatureCard
@@ -824,7 +833,7 @@ export default function LandingPage({ onEnterApp }) {
               icon={Code2}
               accentBg="bg-[#F2C811]/[0.12]"
               accentText="text-[#F2C811]"
-              delay={0.24}
+              delay={0.32}
               t={t}
             />
           </div>
@@ -940,15 +949,6 @@ export default function LandingPage({ onEnterApp }) {
 
           <div className={`flex items-center gap-6 text-[12px] ${t.faint}`}>
             <span>Built with React, Tailwind CSS &amp; Framer Motion</span>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-1.5 ${t.footerLink} transition-colors duration-200`}
-            >
-              <Github size={14} />
-              GitHub
-            </a>
           </div>
         </div>
       </footer>
