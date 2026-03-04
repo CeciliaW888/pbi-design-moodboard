@@ -252,24 +252,11 @@ export default function App() {
     setSelectedId(null);
   }, []);
 
-  const handleNewProject = useCallback(async () => {
-    const newId = crypto.randomUUID();
-    const newState = { ...DEFAULT_STATE, id: newId, name: 'Untitled Project', createdAt: Date.now(), updatedAt: Date.now() };
-    setState(newState);
-    setCurrentProjectId(newId);
-    setActiveProject(newId);
-    saveProjectState(newId, newState);
-
-    // Save to workspace if available
-    if (activeWorkspaceId && user) {
-      try {
-        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
-      } catch (e) { console.warn('Could not save new project to workspace:', e); }
-    }
-
-    setCurrentView('editor');
+  const handleNewProject = useCallback(() => {
+    // Go to home view where user can choose their starting path
+    setCurrentView('home');
     setSelectedId(null);
-  }, [activeWorkspaceId, user]);
+  }, []);
 
   const handleNewPrototype = useCallback(async () => {
     const newId = crypto.randomUUID();
