@@ -521,7 +521,8 @@ export default function LandingPage({ onEnterApp }) {
     ['Open source',                  CellYes, No,          No,          No],
     ['No signup required',           CellYes, No,          CellYes,     CellYes],
     ['Browser-based (zero install)', CellYes, CellYes,     CellYes,     No],
-    ['AI-powered design assist',     CellYes, CellYes,     No,          No],
+    ['AI visual generation (Gemini)', CellYes, No,          No,          No],
+    ['Live dashboard prototyping',   CellYes, CellPartial, No,          No],
     ['Visual moodboard canvas',      CellYes, CellYes,     No,          No],
     ['Color extraction from images', CellYes, CellPartial, No,          No],
     ['Live Power BI preview',        CellYes, CellYes,     CellPartial, No],
@@ -679,9 +680,9 @@ export default function LandingPage({ onEnterApp }) {
               transition={{ duration: 0.7, delay: 0.16 }}
               className={`text-[16px] sm:text-[18px] ${t.body} max-w-[540px] mx-auto mb-9 leading-[1.7]`}
             >
-              Upload inspiration screenshots, extract color palettes,
-              configure typography, and export production&#8209;ready
-              Power&nbsp;BI themes &mdash; all in your browser, with AI&nbsp;assistance.
+              Generate realistic Power&nbsp;BI dashboards with AI, extract palettes from inspiration,
+              prototype with live bar&nbsp;charts, KPIs &amp; donuts &mdash; then export production&#8209;ready
+              themes, all in your browser.
             </motion.p>
 
             <motion.div
@@ -720,10 +721,10 @@ export default function LandingPage({ onEnterApp }) {
       {/* ═══════════ LOGOS / SOCIAL PROOF STRIP ═══════════════════ */}
       <section className={`py-12 px-6 border-y ${t.stripBorder}`}>
         <div className={`max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-x-10 gap-y-4 ${t.stripText} text-[13px] font-medium`}>
-          <span className="flex items-center gap-2"><Layers size={16} /> Power BI Themes</span>
-          <span className="flex items-center gap-2"><Zap size={16} /> Gemini AI</span>
+          <span className="flex items-center gap-2"><Zap size={16} /> AI Visual Generation</span>
+          <span className="flex items-center gap-2"><Eye size={16} /> Live Prototyping</span>
           <span className="flex items-center gap-2"><Palette size={16} /> Color Science</span>
-          <span className="flex items-center gap-2"><MousePointerClick size={16} /> Drag &amp; Drop</span>
+          <span className="flex items-center gap-2"><Layers size={16} /> Power BI Themes</span>
           <span className="flex items-center gap-2"><Code2 size={16} /> PBIP Export</span>
         </div>
       </section>
@@ -758,9 +759,9 @@ export default function LandingPage({ onEnterApp }) {
             />
             <StepCard
               step={3}
-              title="Configure Typography"
-              description="Pick fonts and sizes, then preview how your choices render on real Power BI chart elements."
-              icon={Type}
+              title="Prototype with AI"
+              description="Generate realistic Power BI visuals — bar charts, KPIs, donuts, tables — rendered live with your palette and fonts."
+              icon={Sparkles}
               delay={0.16}
               t={t}
             />
@@ -784,19 +785,28 @@ export default function LandingPage({ onEnterApp }) {
         <div className="relative max-w-7xl mx-auto">
           <SectionHeading
             badge="Features"
-            title="Everything You Need for"
-            highlight="Beautiful Reports"
+            title="A Full Design Studio, Not Just a"
+            highlight="Color Picker"
             t={t}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <FeatureCard
-              title="AI-Powered Mockups"
-              description="Leverage Google Gemini to generate visual ideas, suggest palettes, and refine your design choices with conversational AI."
+              title="AI Visual Generation"
+              description="Describe what you want and Gemini generates realistic Power BI visuals — bar charts, KPIs, donuts, tables — with real data, applied to your palette instantly."
               icon={Sparkles}
               accentBg="bg-[#a855f7]/[0.12]"
               accentText="text-[#c084fc]"
               delay={0}
+              t={t}
+            />
+            <FeatureCard
+              title="Live Dashboard Prototyping"
+              description="See a full dashboard rendered live as you tweak colors, fonts, and layouts. No more guessing — prototype directly in the browser before touching Power BI."
+              icon={Eye}
+              accentBg="bg-[#28c840]/[0.12]"
+              accentText="text-[#4ade80]"
+              delay={0.08}
               t={t}
             />
             <FeatureCard
@@ -805,21 +815,12 @@ export default function LandingPage({ onEnterApp }) {
               icon={Palette}
               accentBg="bg-[#0078D4]/[0.12]"
               accentText="text-[#4da8ff]"
-              delay={0.08}
-              t={t}
-            />
-            <FeatureCard
-              title="Live Power BI Preview"
-              description="See your design system applied to realistic bar, line, and KPI chart mockups in real time as you iterate on colors and fonts."
-              icon={Eye}
-              accentBg="bg-[#28c840]/[0.12]"
-              accentText="text-[#4ade80]"
               delay={0.16}
               t={t}
             />
             <FeatureCard
               title="One-Click Export"
-              description="Export Power BI JSON themes, PBIP visual specifications, or design token files -- ready to hand off to your team."
+              description="Export Power BI JSON themes, PBIP visual specifications, or design token files — ready to hand off to your team."
               icon={Code2}
               accentBg="bg-[#F2C811]/[0.12]"
               accentText="text-[#F2C811]"
