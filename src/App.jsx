@@ -292,6 +292,7 @@ export default function App() {
     const project = {
       ...template,
       id: crypto.randomUUID(),
+      type: 'prototype',
       screenshots: [],
       visuals: [],
       createdAt: Date.now(),
@@ -308,7 +309,7 @@ export default function App() {
       } catch (e) { console.warn('Could not save community template project:', e); }
     }
 
-    setCurrentView('editor');
+    setCurrentView('prototype');
     setSelectedId(null);
   }, [activeWorkspaceId, user]);
 
