@@ -9,7 +9,6 @@ import {
   createWorkspace, getUserWorkspaces, getWorkspaceProjects, saveWorkspaceProject,
   deleteWorkspaceProject, renameWorkspaceProject, duplicateWorkspaceProject,
 } from './firebase';
-import { TEMPLATES, createProjectFromTemplate, getTemplateById } from './lib/templates';
 import { migrateUserToWorkspaces, ensurePersonalWorkspace } from './lib/migration';
 import { useRealtimeProject } from './hooks/useRealtimeProject';
 import { usePresence } from './hooks/usePresence';
@@ -265,25 +264,6 @@ export default function App() {
     }
 
     setCurrentView('prototype');
-    setSelectedId(null);
-  }, [activeWorkspaceId, user]);
-
-  const handleUseTemplate = useCallback(async (templateId) => {
-    const template = getTemplateById(templateId);
-    if (!template) return;
-    const project = createProjectFromTemplate(template);
-    setState(project);
-    setCurrentProjectId(project.id);
-    setActiveProject(project.id);
-    saveProjectState(project.id, project);
-
-    if (activeWorkspaceId && user) {
-      try {
-        await saveWorkspaceProject(activeWorkspaceId, project);
-      } catch (e) { console.warn('Could not save template project to workspace:', e); }
-    }
-
-    setCurrentView('editor');
     setSelectedId(null);
   }, [activeWorkspaceId, user]);
 
@@ -634,28 +614,6 @@ export default function App() {
     );
   }
 
-  // --- Templates view ---
-  const renderTemplatesView = () => (
-    <div className="flex-1 overflow-y-auto">
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold text-text mb-2">Templates</h1>
-        <p className="text-text-muted mb-8">Start with a curated design system</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {TEMPLATES.map(template => (
-            <ProjectCard
-              key={template.id}
-              project={template}
-              onOpen={() => handleUseTemplate(template.id)}
-              onRename={() => {}}
-              onDuplicate={() => {}}
-              onDelete={() => {}}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   // --- All Projects view ---
   const renderProjectsView = () => (
     <div className="flex-1 overflow-y-auto">
@@ -924,7 +882,6 @@ export default function App() {
             onRenameProject={handleRenameProject}
             onDuplicateProject={handleDuplicateProject}
             onDeleteProject={handleDeleteProject}
-            onUseTemplate={handleUseTemplate}
             onNewPrototype={handleNewPrototype}
           />
         )}
@@ -941,7 +898,6 @@ export default function App() {
         {currentView === 'gallery' && (
           <TemplateGallery onUseTemplate={handleUseCommunityTemplate} />
         )}
-        {currentView === 'templates' && renderTemplatesView()}
         {currentView === 'projects' && renderProjectsView()}
       </div>
 

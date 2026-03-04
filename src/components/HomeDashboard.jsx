@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Palette, LayoutTemplate, Zap, ArrowRight, Search } from 'lucide-react';
 import ProjectCard from './ProjectCard';
 import PathCard from './PathCard';
+import DittoMascot from './DittoMascot';
 
 export default function HomeDashboard({
   user,
@@ -12,7 +13,6 @@ export default function HomeDashboard({
   onRenameProject,
   onDuplicateProject,
   onDeleteProject,
-  onUseTemplate,
   onNewPrototype,
 }) {
   const recentProjects = (projects || []).slice(0, 6);
@@ -26,8 +26,9 @@ export default function HomeDashboard({
           animate={{ opacity: 1, y: 0 }}
           className="mb-10"
         >
-          <h1 className="text-2xl font-bold text-text">
+          <h1 className="text-2xl font-bold text-text flex items-center gap-2">
             Welcome back{user?.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}
+            <DittoMascot size={36} expression="happy" />
           </h1>
           <p className="text-text-muted mt-1">What would you like to create?</p>
         </motion.div>
@@ -99,7 +100,7 @@ export default function HomeDashboard({
             </div>
           ) : (
             <div className="text-center py-16 bg-surface-light border border-surface-lighter rounded-xl">
-              <Search size={32} className="mx-auto mb-3 text-text-muted/30" />
+              <DittoMascot size={64} className="mx-auto mb-3" />
               <p className="text-sm font-medium text-text-muted">No projects yet</p>
               <p className="text-xs text-text-muted/70 mt-1">Create your first project to get started</p>
             </div>
