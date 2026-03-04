@@ -27,6 +27,7 @@ import GeminiPromptModal from './components/GeminiPromptModal';
 import LandingPage from './components/LandingPage';
 import ProjectCard from './components/ProjectCard';
 import PrototypeEditor from './components/PrototypeEditor';
+import TemplateGallery from './components/TemplateGallery';
 import { Sparkles, Palette, Settings, Eye, Download, Wand2, X } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
@@ -280,6 +281,31 @@ export default function App() {
       try {
         await saveWorkspaceProject(activeWorkspaceId, project);
       } catch (e) { console.warn('Could not save template project to workspace:', e); }
+    }
+
+    setCurrentView('editor');
+    setSelectedId(null);
+  }, [activeWorkspaceId, user]);
+
+  // Use a community template (receives full template object)
+  const handleUseCommunityTemplate = useCallback(async (template) => {
+    const project = {
+      ...template,
+      id: crypto.randomUUID(),
+      screenshots: [],
+      visuals: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    setState(project);
+    setCurrentProjectId(project.id);
+    setActiveProject(project.id);
+    saveProjectState(project.id, project);
+
+    if (activeWorkspaceId && user) {
+      try {
+        await saveWorkspaceProject(activeWorkspaceId, project);
+      } catch (e) { console.warn('Could not save community template project:', e); }
     }
 
     setCurrentView('editor');
@@ -910,6 +936,9 @@ export default function App() {
             onSelect={setSelectedId}
             onOpenGeminiModal={handleOpenGeminiModal}
           />
+        )}
+        {currentView === 'gallery' && (
+          <TemplateGallery onUseTemplate={handleUseCommunityTemplate} />
         )}
         {currentView === 'templates' && renderTemplatesView()}
         {currentView === 'projects' && renderProjectsView()}

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FolderOpen, LayoutTemplate, BookOpen, ChevronLeft, ChevronRight, Plus, Users, Check } from 'lucide-react';
+import { Home, FolderOpen, LayoutTemplate, Compass, BookOpen, ChevronLeft, ChevronRight, Plus, Users, Check } from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', Icon: Home },
   { id: 'projects', label: 'My Projects', Icon: FolderOpen },
-  { id: 'templates', label: 'Templates', Icon: LayoutTemplate },
+  { id: 'gallery', label: 'Gallery', Icon: Compass },
+  { id: 'templates', label: 'Starter Kits', Icon: LayoutTemplate },
   { id: 'resources', label: 'Resources', Icon: BookOpen },
 ];
 
