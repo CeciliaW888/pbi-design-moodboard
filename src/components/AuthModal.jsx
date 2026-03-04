@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Mail, ArrowLeft } from 'lucide-react';
 import { signInWithGoogle, signInWithMicrosoft, signInWithGithub, signInEmail, signUpEmail, resetPassword } from '../firebase';
 
 export default function AuthModal({ onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
   const [mode, setMode] = useState('providers'); // providers | email | reset
   const [emailMode, setEmailMode] = useState('signin'); // signin | signup
   const [email, setEmail] = useState('');
@@ -69,8 +74,9 @@ export default function AuthModal({ onClose }) {
       setResetSent(true);
     } catch (e) {
       const msg = e.message || '';
-      if (msg.includes('user-not-found')) {
-        setError('No account found with this email');
+      if (msg.includes('user-not-found') || msg.includes('invalid-credential')) {
+        setError('If an account exists with this email, a reset link has been sent');
+        setResetSent(true);
       } else {
         setError(msg.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim());
       }

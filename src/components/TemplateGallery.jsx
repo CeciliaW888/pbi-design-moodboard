@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Star, TrendingUp, ArrowRight, X, Check, Sparkles } from 'lucide-react';
 import { COMMUNITY_TEMPLATES, CATEGORIES, SORT_OPTIONS, filterTemplates } from '../lib/communityTemplates';
@@ -200,6 +200,12 @@ function TemplateCard({ template, onUse }) {
 }
 
 function TemplateDetailModal({ template, onUse, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!template) return null;
 
   return (

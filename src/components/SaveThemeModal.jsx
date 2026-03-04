@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Bookmark, Loader2 } from 'lucide-react';
 import { saveTheme } from '../lib/themeStorage';
 
 export default function SaveThemeModal({ designSystem, workspaceId, onClose, onSaved }) {
   const [name, setName] = useState(designSystem?.name || '');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

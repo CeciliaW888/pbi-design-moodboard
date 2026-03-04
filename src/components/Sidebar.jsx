@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FolderOpen, Compass, BookOpen, ChevronLeft, ChevronRight, Plus, Users, Check } from 'lucide-react';
+import { Home, FolderOpen, Compass, ChevronLeft, ChevronRight, Plus, Users, Check } from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', Icon: Home },
   { id: 'projects', label: 'Projects', Icon: FolderOpen },
   { id: 'gallery', label: 'Gallery', Icon: Compass },
-  { id: 'resources', label: 'Resources', Icon: BookOpen },
 ];
 
 export default function Sidebar({

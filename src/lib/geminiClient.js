@@ -2,6 +2,56 @@ import { GoogleGenAI } from '@google/genai';
 
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-3.1-pro', 'gemini-3.0-pro'];
 
+const VALID_VISUAL_TYPES = ['bar', 'line', 'kpi', 'table', 'donut', 'area', 'scatter'];
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+function sanitizeString(str, maxLen = 200) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/<[^>]*>/g, '').replace(/[<>"'&]/g, '').slice(0, maxLen);
+}
+
+function validateSpec(spec) {
+  if (!spec || typeof spec !== 'object') throw new Error('Invalid spec: not an object');
+
+  const visualType = VALID_VISUAL_TYPES.includes(spec.visualType) ? spec.visualType : 'bar';
+
+  const series = Array.isArray(spec.series)
+    ? spec.series.slice(0, 20).map(s => ({
+        name: sanitizeString(s.name || '', 100),
+        color: HEX_RE.test(s.color) ? s.color : '#0078D4',
+        values: Array.isArray(s.values) ? s.values.filter(v => typeof v === 'number').slice(0, 50) : [],
+      }))
+    : [];
+
+  const categories = Array.isArray(spec.categories)
+    ? spec.categories.slice(0, 50).map(c => sanitizeString(String(c), 100))
+    : [];
+
+  const tableHeaders = Array.isArray(spec.tableHeaders)
+    ? spec.tableHeaders.slice(0, 10).map(h => sanitizeString(String(h), 100))
+    : [];
+
+  const tableRows = Array.isArray(spec.tableRows)
+    ? spec.tableRows.slice(0, 50).map(row =>
+        Array.isArray(row) ? row.slice(0, 10).map(v => sanitizeString(String(v), 200)) : []
+      )
+    : [];
+
+  return {
+    visualType,
+    title: sanitizeString(spec.title || '', 150),
+    subtitle: sanitizeString(spec.subtitle || '', 200),
+    measureUnit: sanitizeString(spec.measureUnit || '', 20),
+    series,
+    categories,
+    kpiValue: sanitizeString(spec.kpiValue || '', 50),
+    kpiTrend: ['up', 'down', 'neutral'].includes(spec.kpiTrend) ? spec.kpiTrend : 'neutral',
+    kpiChange: sanitizeString(spec.kpiChange || '', 50),
+    tableHeaders,
+    tableRows,
+  };
+}
+
 /**
  * Generates a PBI visual spec using Gemini.
  * @param {string} apiKey
@@ -73,13 +123,15 @@ Rules:
       });
 
       const text = response.text;
+      let spec;
       try {
-        return JSON.parse(text);
+        spec = JSON.parse(text);
       } catch {
         const match = text.match(/\{[\s\S]*\}/);
-        if (match) return JSON.parse(match[0]);
-        throw new Error('Gemini returned invalid JSON: ' + text.slice(0, 200));
+        if (match) spec = JSON.parse(match[0]);
+        else throw new Error('Gemini returned invalid JSON: ' + text.slice(0, 200));
       }
+      return validateSpec(spec);
     } catch (err) {
       lastError = err;
       const status = err?.status || err?.httpStatusCode;

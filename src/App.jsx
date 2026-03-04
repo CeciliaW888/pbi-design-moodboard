@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { loadState, saveState, saveProjectState, setActiveProject, deleteProjectState } from './lib/storage';
+import { loadState, saveState, saveProjectState, setActiveProject, deleteProjectState, clearState } from './lib/storage';
 import { extractColors, analyzePalette } from './lib/colorExtractor';
 import {
   auth, onAuthStateChanged, logOut,
@@ -882,7 +882,7 @@ export default function App() {
       <Header
         user={user}
         onSignIn={() => setShowAuth(true)}
-        onSignOut={logOut}
+        onSignOut={() => { clearState(); logOut(); }}
         themeName={state.name}
         onNameChange={(name) => update({ name })}
         theme={theme}

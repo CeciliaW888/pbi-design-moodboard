@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Clipboard, Monitor, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Clipboard, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import DittoMascot from './DittoMascot';
 
 // Toast notification types
 const TOAST_TYPES = {
@@ -206,8 +207,8 @@ function EmptyCanvas({ onClickUpload, isUploading }) {
       }}
     >
       <div className="text-center max-w-lg">
-        <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Monitor size={40} className="text-primary" />
+        <div className="mx-auto mb-6">
+          <DittoMascot size={80} expression="wave" className="mx-auto" />
         </div>
         <h2 className="text-2xl font-bold mb-2 text-text">Design your Power BI theme</h2>
         <p className="text-sm text-text-muted mb-6">in minutes, not hours</p>

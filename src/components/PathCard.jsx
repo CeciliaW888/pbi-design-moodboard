@@ -18,7 +18,7 @@ export default function PathCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: 'easeOut' }}
       onClick={onClick}
-      className="group flex flex-col items-center text-center p-8 bg-surface-light dark:bg-[#14142c] border border-surface-lighter rounded-2xl hover:-translate-y-1 hover:shadow-lg hover:border-primary/40 transition-all duration-300 cursor-pointer"
+      className="group flex flex-col items-center text-center p-8 bg-surface-light border border-surface-lighter rounded-2xl hover:-translate-y-1 hover:shadow-lg hover:border-primary/40 transition-all duration-300 cursor-pointer"
     >
       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${iconGradient} flex items-center justify-center mb-5`}>
         <Icon size={28} className="text-white" />

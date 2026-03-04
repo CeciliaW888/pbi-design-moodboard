@@ -11,17 +11,13 @@
   },
   "dependencies": {
     "@google/genai": "^1.43.0",
-    "@headlessui/react": "^2.2.9",
     "@tailwindcss/vite": "^4.2.1",
-    "color-thief-browser": "^2.0.2",
-    "file-saver": "^2.0.5",
     "firebase": "^12.9.0",
     "framer-motion": "^12.34.3",
     "jszip": "^3.10.1",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-dropzone": "^15.0.0",
     "react-rnd": "^10.5.2",
     "tailwindcss": "^4.2.1"
   },

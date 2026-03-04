@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Palette, LayoutTemplate, Zap, ArrowRight, Search } from 'lucide-react';
+import { Palette, LayoutTemplate, Zap, ArrowRight } from 'lucide-react';
 import ProjectCard from './ProjectCard';
 import PathCard from './PathCard';
 import DittoMascot from './DittoMascot';

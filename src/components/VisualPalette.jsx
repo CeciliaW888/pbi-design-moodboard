@@ -6,6 +6,7 @@ import {
   Wand2, Plus, Grid3X3, Image, Eye, EyeOff, Monitor,
 } from 'lucide-react';
 import { VISUAL_TYPES, VISUAL_TEMPLATES } from '../lib/placeholderData';
+import DittoMascot from './DittoMascot';
 
 const ICON_MAP = {
   header: LayoutDashboard,
@@ -373,6 +374,9 @@ export default function VisualPalette({
                   </div>
                 );
               })}
+            </div>
+            <div className="flex justify-center py-3">
+              <DittoMascot size={32} />
             </div>
           </div>
         </div>

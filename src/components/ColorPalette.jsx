@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Plus, Info, AlertTriangle } from 'lucide-react';
+import DittoMascot from './DittoMascot';
 import { useState } from 'react';
 
 const PBI_COLOR_ROLES = [
@@ -98,9 +99,7 @@ export default function ColorPalette({ colors, onRemove, onAdd, analysis }) {
 
       {colors.length === 0 ? (
         <div className="text-center py-8 text-text-muted text-sm">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-surface flex items-center justify-center border border-surface-lighter">
-            <Plus size={20} className="text-text-light" />
-          </div>
+          <DittoMascot size={48} className="mx-auto mb-3" />
           <p className="font-medium mb-1">No colors yet</p>
           <p className="text-xs max-w-[200px] mx-auto text-text-muted">
             Select a screenshot and click the wand icon to extract colors, or add one manually.

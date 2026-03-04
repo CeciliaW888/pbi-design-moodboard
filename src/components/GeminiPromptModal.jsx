@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Wand2, Loader2, Settings } from 'lucide-react';
+import DittoMascot from './DittoMascot';
 import { generateVisualSpec } from '../lib/geminiClient';
 
 const VISUAL_TYPES = [
@@ -23,6 +24,12 @@ export default function GeminiPromptModal({
   const [typeOverride, setTypeOverride] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -141,7 +148,7 @@ export default function GeminiPromptModal({
               className="flex-1 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (
-                <><Loader2 size={15} className="animate-spin" /> Generating…</>
+                <><DittoMascot size={24} expression="thinking" /> Generating…</>
               ) : (
                 <><Wand2 size={15} /> Generate</>
               )}

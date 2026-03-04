@@ -6,6 +6,12 @@ import { COMMUNITY_TEMPLATES } from '../lib/communityTemplates';
 
 export default function LoadThemeModal({ workspaceId, onClose, onApplyTheme, currentDesignSystem }) {
   const [tab, setTab] = useState('my');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');

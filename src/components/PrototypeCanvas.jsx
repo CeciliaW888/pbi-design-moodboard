@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import VisualCard from './VisualCard';
 import { VISUAL_SIZES } from '../lib/placeholderData';
+import DittoMascot from './DittoMascot';
 
 export default function PrototypeCanvas({
   pageWidth = 1280,
@@ -167,7 +168,7 @@ export default function PrototypeCanvas({
   return (
     <div
       ref={containerRef}
-      className="flex-1 relative overflow-hidden bg-[#E8EDF2] dark:bg-[#1E2530]"
+      className="flex-1 relative overflow-hidden bg-surface dark:bg-surface"
       onMouseDown={handleMouseDown}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -254,8 +255,9 @@ export default function PrototypeCanvas({
           {visuals.length === 0 && !dragOver && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <p className="text-sm text-gray-400 font-medium">Click/Drag elements onto the canvas</p>
-                <p className="text-xs text-gray-400/60 mt-1">Resize from the corners after placing</p>
+                <DittoMascot size={120} expression="wave" className="mx-auto mb-3" />
+                <p className="text-sm text-text-muted font-medium">Click/Drag elements onto the canvas</p>
+                <p className="text-xs text-text-muted/60 mt-1">Resize from the corners after placing</p>
               </div>
             </div>
           )}
