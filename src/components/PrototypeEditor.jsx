@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Download, Undo2, Redo2 } from 'lucide-react';
+import { Download, Undo2, Redo2, Palette } from 'lucide-react';
 import PrototypeCanvas from './PrototypeCanvas';
 import VisualPalette from './VisualPalette';
 import ThemePanel from './ThemePanel';
@@ -7,7 +7,7 @@ import StylePickerModal from './StylePickerModal';
 import { generatePlaceholderSpec, generateTemplateSpec, VISUAL_SIZES, VISUAL_TEMPLATES } from '../lib/placeholderData';
 import { exportFullPBIR } from '../lib/pbipExporter';
 
-export default function PrototypeEditor({ state, onUpdate, selectedId, onSelect, onOpenGeminiModal }) {
+export default function PrototypeEditor({ state, onUpdate, selectedId, onSelect, onOpenGeminiModal, onLoadTheme, activeTheme }) {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [stylePickerVisual, setStylePickerVisual] = useState(null);
@@ -211,6 +211,21 @@ export default function PrototypeEditor({ state, onUpdate, selectedId, onSelect,
         </button>
 
         <div className="flex-1" />
+
+        {activeTheme && (
+          <span className="text-xs text-primary font-medium flex items-center gap-1">
+            <Palette size={12} />
+            {activeTheme.themeName || activeTheme.name}
+          </span>
+        )}
+
+        <button
+          onClick={onLoadTheme}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-primary/30 text-primary text-xs font-medium rounded-lg hover:bg-primary/10 transition-colors"
+        >
+          <Palette size={14} />
+          Load Theme
+        </button>
 
         <span className="text-xs text-text-muted">
           {(state.visuals || []).length} visual{(state.visuals || []).length !== 1 ? 's' : ''}

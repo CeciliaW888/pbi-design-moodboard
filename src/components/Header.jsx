@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogOut, User, Sun, Moon, Settings, ExternalLink, Key, Menu, ArrowLeft } from 'lucide-react';
+import { LogOut, User, Sun, Moon, Settings, ExternalLink, Key, Menu, ArrowLeft, Share2, Copy, Check, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PresenceAvatars from './PresenceAvatars';
 
@@ -16,30 +16,59 @@ export default function Header({
   currentView,
   onGoHome,
   onToggleSidebar,
-  // Phase 3: presence
   activeUsers = [],
+  workspaceId,
+  projectId,
+  onSave,
 }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [copied, setCopied] = useState(false);
   const settingsRef = useRef(null);
+  const shareRef = useRef(null);
   const isEditor = currentView === 'editor';
+  const isPrototype = currentView === 'prototype';
+  const isInEditor = isEditor || isPrototype;
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
-        setShowSettings(false);
-      }
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowSettings(false);
+      if (shareRef.current && !shareRef.current.contains(e.target)) setShowShare(false);
     }
-    if (showSettings) {
+    if (showSettings || showShare) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [showSettings]);
+  }, [showSettings, showShare]);
+
+  const shareUrl = workspaceId && projectId
+    ? `${window.location.origin}?ws=${workspaceId}&project=${projectId}`
+    : null;
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-surface-lighter bg-surface-light/85 backdrop-blur-xl sticky top-0 z-40">
       <div className="flex items-center gap-3">
         {/* Sidebar toggle / Back button */}
-        {isEditor ? (
+        {isInEditor ? (
           <button
             onClick={onGoHome}
             className="p-2 text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors"
@@ -83,10 +112,128 @@ export default function Header({
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Presence avatars — editor only */}
-        {isEditor && activeUsers.length > 0 && (
+      <div className="flex items-center gap-2">
+        {/* Presence avatars — editor/prototype only */}
+        {isInEditor && activeUsers.length > 0 && (
           <PresenceAvatars users={activeUsers} currentUserId={user?.uid} />
+        )}
+
+        {/* Share button — editor/prototype only */}
+        {isInEditor && (
+          <div ref={shareRef} className="relative">
+            <button
+              onClick={() => {
+                setShowShare(prev => !prev);
+                // Auto-save when opening share panel
+                if (!showShare && onSave) onSave();
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                showShare
+                  ? 'bg-primary text-white'
+                  : 'bg-primary/10 text-primary hover:bg-primary/20'
+              }`}
+              title="Share for collaboration"
+            >
+              <Share2 size={14} />
+              <span className="hidden sm:inline">Share</span>
+            </button>
+
+            <AnimatePresence>
+              {showShare && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 bg-surface-light border border-surface-lighter rounded-xl shadow-2xl z-50 overflow-hidden"
+                >
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold text-text flex items-center gap-2 mb-1">
+                      <Link2 size={14} className="text-primary" />
+                      Share this project
+                    </h3>
+                    <p className="text-[11px] text-text-muted mb-3">
+                      Anyone with the link can view and edit in real-time
+                    </p>
+
+                    {user ? (
+                      shareUrl ? (
+                        <div className="space-y-3">
+                          {/* Link preview */}
+                          <div className="flex items-center gap-2 bg-surface rounded-lg border border-surface-lighter p-2">
+                            <input
+                              type="text"
+                              value={shareUrl}
+                              readOnly
+                              className="flex-1 bg-transparent text-[11px] text-text-muted outline-none font-mono truncate"
+                            />
+                            <button
+                              onClick={handleCopyLink}
+                              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all flex-shrink-0 ${
+                                copied
+                                  ? 'bg-green-500/10 text-green-600'
+                                  : 'bg-primary text-white hover:bg-primary-dark'
+                              }`}
+                            >
+                              {copied ? <Check size={12} /> : <Copy size={12} />}
+                              {copied ? 'Copied' : 'Copy'}
+                            </button>
+                          </div>
+
+                          {/* Active collaborators */}
+                          {activeUsers.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider mb-1.5">
+                                Active now ({activeUsers.length})
+                              </p>
+                              <div className="space-y-1">
+                                {activeUsers.slice(0, 5).map(u => (
+                                  <div key={u.odId || u.email} className="flex items-center gap-2 py-1">
+                                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-bold text-primary flex-shrink-0">
+                                      {(u.name || u.email || '?')[0].toUpperCase()}
+                                    </div>
+                                    <span className="text-[11px] text-text truncate">{u.name || u.email}</span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0 ml-auto" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-3">
+                          <p className="text-xs text-text-muted mb-2">
+                            Save this project first to enable sharing
+                          </p>
+                          {onSave && (
+                            <button
+                              onClick={async () => {
+                                await onSave();
+                                setShowShare(true);
+                              }}
+                              className="px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-dark transition-colors"
+                            >
+                              Save Project
+                            </button>
+                          )}
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-xs text-text-muted mb-2">Sign in to share and collaborate</p>
+                        <button
+                          onClick={() => { onSignIn(); setShowShare(false); }}
+                          className="px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-dark transition-colors"
+                        >
+                          Sign In
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
 
         {/* Settings gear — only show in editor */}
@@ -160,9 +307,13 @@ export default function Header({
         {user ? (
           <div className="flex items-center gap-2">
             <img
-              src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=0078D4&color=fff&size=32`}
+              src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=0078D4&color=fff&size=32`}
               alt=""
               className="w-8 h-8 rounded-full"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=0078D4&color=fff&size=32`;
+              }}
             />
             <span className="text-sm text-text-muted hidden sm:block">{user.displayName || user.email}</span>
             <button onClick={onSignOut} className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface transition-colors" title="Sign out">

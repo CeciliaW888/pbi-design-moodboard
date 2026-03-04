@@ -27,7 +27,9 @@ import LandingPage from './components/LandingPage';
 import ProjectCard from './components/ProjectCard';
 import PrototypeEditor from './components/PrototypeEditor';
 import TemplateGallery from './components/TemplateGallery';
-import { Sparkles, Palette, Settings, Eye, Download, Wand2, X } from 'lucide-react';
+import SaveThemeModal from './components/SaveThemeModal';
+import LoadThemeModal from './components/LoadThemeModal';
+import { Sparkles, Palette, Settings, Eye, Download, Wand2, X, Bookmark } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
 const DEFAULT_STATE = {
@@ -78,6 +80,9 @@ export default function App() {
   const [isPlacingVisual, setIsPlacingVisual] = useState(false);
   const [pendingVisualSpec, setPendingVisualSpec] = useState(null);
   const [showGeminiModal, setShowGeminiModal] = useState(false);
+  const [showSaveTheme, setShowSaveTheme] = useState(false);
+  const [showLoadTheme, setShowLoadTheme] = useState(false);
+  const [activeTheme, setActiveTheme] = useState(null);
   const [showLanding, setShowLanding] = useState(
     () => !localStorage.getItem('pbi-moodboard-visited')
   );
@@ -143,6 +148,33 @@ export default function App() {
       }
     });
     return unsub;
+  }, []);
+
+  // --- Handle shared link URL params ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wsParam = params.get('ws');
+    const projectParam = params.get('project');
+    if (wsParam && projectParam) {
+      setActiveWorkspaceId(wsParam);
+      setCurrentProjectId(projectParam);
+      // Try to load the project - we'll determine type after loading
+      getWorkspaceProjects(wsParam).then(projects => {
+        const project = projects.find(p => p.id === projectParam);
+        if (project) {
+          setState(prev => ({ ...prev, ...project }));
+          setCurrentView(project.type === 'prototype' ? 'prototype' : 'editor');
+        } else {
+          // Project exists in Firestore but not in the projects list - open as prototype
+          setCurrentView('prototype');
+        }
+      }).catch(() => {
+        // Still open the editor - real-time listener will sync data
+        setCurrentView('prototype');
+      });
+      // Clean URL without reloading
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   async function initWorkspaces(uid) {
@@ -822,7 +854,16 @@ export default function App() {
             )}
           </div>
 
-          <div className="p-4 border-t border-surface-lighter">
+          <div className="p-4 border-t border-surface-lighter space-y-2">
+            {activePalette.length > 0 && (
+              <button
+                onClick={() => user ? setShowSaveTheme(true) : setShowAuth(true)}
+                className="w-full py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-full transition-all flex items-center justify-center gap-2 border border-primary/20"
+              >
+                <Bookmark size={16} />
+                Save as Theme
+              </button>
+            )}
             <button
               onClick={handleSaveToLibrary}
               className="w-full py-3 bg-yellow hover:bg-yellow/90 text-[#7a6200] font-bold rounded-full transition-all flex items-center justify-center gap-2 shadow-[0_8px_32px_rgba(242,200,17,0.4)] hover:shadow-[0_16px_48px_rgba(242,200,17,0.5)] hover:-translate-y-0.5"
@@ -852,6 +893,9 @@ export default function App() {
         onGoHome={handleGoHome}
         onToggleSidebar={() => setSidebarCollapsed(c => !c)}
         activeUsers={activeUsers}
+        workspaceId={activeWorkspaceId}
+        projectId={currentProjectId}
+        onSave={handleSaveToLibrary}
       />
 
       <div className="flex-1 flex min-h-0 overflow-hidden">
@@ -893,6 +937,8 @@ export default function App() {
             selectedId={selectedId}
             onSelect={setSelectedId}
             onOpenGeminiModal={handleOpenGeminiModal}
+            onLoadTheme={() => user ? setShowLoadTheme(true) : setShowAuth(true)}
+            activeTheme={activeTheme}
           />
         )}
         {currentView === 'gallery' && (
@@ -909,6 +955,30 @@ export default function App() {
             onGenerate={handleGeminiGenerate}
             designSystem={designSystem}
             apiKey={geminiApiKey}
+          />
+        )}
+        {showSaveTheme && (
+          <SaveThemeModal
+            designSystem={designSystem}
+            workspaceId={activeWorkspaceId}
+            onClose={() => setShowSaveTheme(false)}
+            onSaved={(theme) => setActiveTheme(theme)}
+          />
+        )}
+        {showLoadTheme && (
+          <LoadThemeModal
+            workspaceId={activeWorkspaceId}
+            onClose={() => setShowLoadTheme(false)}
+            onApplyTheme={(theme) => {
+              setActiveTheme(theme);
+              update({
+                palette: theme.colors,
+                fonts: theme.fonts,
+                background: theme.background,
+                sentinels: theme.sentinels,
+              });
+            }}
+            currentDesignSystem={designSystem}
           />
         )}
       </AnimatePresence>
