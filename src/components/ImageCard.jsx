@@ -90,7 +90,7 @@ export default function ImageCard({
         <img
           src={screenshot.dataUrl}
           alt={screenshot.name}
-          className="w-full h-full object-cover pointer-events-none select-none"
+          className="w-full h-full object-contain pointer-events-none select-none"
           draggable={false}
         />
 
@@ -110,17 +110,19 @@ export default function ImageCard({
             <button
               onClick={handleAnalyze}
               disabled={analyzing}
-              className="p-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors disabled:opacity-50"
+              className="px-2 py-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-1 text-[11px] font-medium"
               title="Extract colors"
             >
-              {analyzing ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+              {analyzing ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
+              Extract
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              className="p-1.5 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors"
+              className="px-2 py-1.5 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors flex items-center gap-1 text-[11px] font-medium"
               title="Remove"
             >
-              <X size={14} />
+              <X size={13} />
+              Delete
             </button>
           </div>
         )}
