@@ -655,7 +655,7 @@ export default function LandingPage({ onEnterApp }) {
             >
               <span className="inline-flex items-center gap-2 px-4 py-1.5 text-[11px] font-semibold tracking-wide uppercase text-[#0078D4] bg-[#0078D4]/[0.08] border border-[#0078D4]/[0.15] rounded-full mb-7">
                 <Sparkles size={12} strokeWidth={2} />
-                Free &amp; Open Source
+                Powered by Gemini AI &middot; Free &amp; Open Source
               </span>
             </motion.div>
 
@@ -665,13 +665,12 @@ export default function LandingPage({ onEnterApp }) {
               transition={{ duration: 0.7, delay: 0.08 }}
               className="text-[36px] sm:text-[48px] md:text-[60px] font-extrabold leading-[1.08] tracking-[-0.02em] mb-6"
             >
-              Your Power BI{' '}
-              <span className="bg-gradient-to-r from-[#0078D4] via-[#4da8ff] to-[#F2C811] bg-clip-text text-transparent">
-                Design System
-              </span>
-              ,{' '}
+              Design Power&nbsp;BI Dashboards{' '}
               <br className="hidden md:block" />
-              In&nbsp;Minutes
+              with{' '}
+              <span className="bg-gradient-to-r from-[#0078D4] via-[#4da8ff] to-[#F2C811] bg-clip-text text-transparent">
+                AI
+              </span>
             </motion.h1>
 
             <motion.p
@@ -680,9 +679,9 @@ export default function LandingPage({ onEnterApp }) {
               transition={{ duration: 0.7, delay: 0.16 }}
               className={`text-[16px] sm:text-[18px] ${t.body} max-w-[540px] mx-auto mb-9 leading-[1.7]`}
             >
-              Generate realistic Power&nbsp;BI dashboards with AI, extract palettes from inspiration,
-              prototype with live bar&nbsp;charts, KPIs &amp; donuts &mdash; then export production&#8209;ready
-              themes, all in your browser.
+              Stop guessing what your dashboard will look like. Ditto uses Gemini&nbsp;AI to generate
+              realistic bar&nbsp;charts, KPIs, donuts &amp; tables with real business data &mdash; then lets you
+              preview your theme on live visuals and export production&#8209;ready Power&nbsp;BI themes instantly.
             </motion.p>
 
             <motion.div
@@ -721,11 +720,11 @@ export default function LandingPage({ onEnterApp }) {
       {/* ═══════════ LOGOS / SOCIAL PROOF STRIP ═══════════════════ */}
       <section className={`py-12 px-6 border-y ${t.stripBorder}`}>
         <div className={`max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-x-10 gap-y-4 ${t.stripText} text-[13px] font-medium`}>
-          <span className="flex items-center gap-2"><Zap size={16} /> AI Visual Generation</span>
-          <span className="flex items-center gap-2"><Eye size={16} /> Live Prototyping</span>
-          <span className="flex items-center gap-2"><Palette size={16} /> Color Science</span>
-          <span className="flex items-center gap-2"><Layers size={16} /> Power BI Themes</span>
-          <span className="flex items-center gap-2"><Code2 size={16} /> PBIP Export</span>
+          <span className="flex items-center gap-2"><Zap size={16} /> Gemini AI Generation</span>
+          <span className="flex items-center gap-2"><Eye size={16} /> Live Chart Preview</span>
+          <span className="flex items-center gap-2"><Palette size={16} /> Auto Color Extraction</span>
+          <span className="flex items-center gap-2"><Layers size={16} /> JSON Theme Export</span>
+          <span className="flex items-center gap-2"><Code2 size={16} /> PBIP Native Format</span>
         </div>
       </section>
 
@@ -734,41 +733,41 @@ export default function LandingPage({ onEnterApp }) {
         <div className="max-w-7xl mx-auto">
           <SectionHeading
             badge="How It Works"
-            title="From Inspiration to"
-            highlight="Production Theme"
-            description="Four simple steps to create a consistent, polished Power BI design system."
+            title="Screenshot to Production Theme in"
+            highlight="60 Seconds"
+            description="Upload inspiration, let AI generate realistic dashboard visuals, preview live, and export — all without opening Power BI."
             t={t}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <StepCard
               step={1}
-              title="Upload Screenshots"
-              description="Drag in your favorite dashboards, branding assets, or UI references as visual inspiration."
+              title="Drop a Screenshot"
+              description="Drag in any dashboard, brand guide, or UI you love. Ditto instantly extracts the color palette and typography."
               icon={Image}
               delay={0}
               t={t}
             />
             <StepCard
               step={2}
-              title="Extract & Refine Colors"
-              description="Automatically pull dominant colors from screenshots, then fine-tune your palette with precision."
+              title="Refine Your Palette"
+              description="Fine-tune extracted colors with live accessibility checks. Set primary, accent, sentiment, and conditional formatting colors."
               icon={Palette}
               delay={0.08}
               t={t}
             />
             <StepCard
               step={3}
-              title="Prototype with AI"
-              description="Generate realistic Power BI visuals — bar charts, KPIs, donuts, tables — rendered live with your palette and fonts."
+              title="AI Generates Your Dashboard"
+              description="Hit one button and Gemini AI creates realistic Power BI visuals — bar charts, KPIs, donuts, tables — with actual business data in your theme."
               icon={Sparkles}
               delay={0.16}
               t={t}
             />
             <StepCard
               step={4}
-              title="Export Your Theme"
-              description="Download a production-ready JSON theme, PBIP visual specs, or design tokens in one click."
+              title="Preview Live & Export"
+              description="See your theme on interactive charts instantly. Then export Power BI JSON themes, PBIP visual specs, or hand off to your team."
               icon={Download}
               delay={0.24}
               t={t}
@@ -785,15 +784,16 @@ export default function LandingPage({ onEnterApp }) {
         <div className="relative max-w-7xl mx-auto">
           <SectionHeading
             badge="Features"
-            title="A Full Design Studio, Not Just a"
-            highlight="Color Picker"
+            title="The AI-Powered Design Studio That"
+            highlight="Others Can't Match"
+            description="Not a color picker. Not a static wireframe tool. Ditto generates realistic, interactive Power BI prototypes with AI."
             t={t}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <FeatureCard
               title="AI Visual Generation"
-              description="Describe what you want and Gemini generates realistic Power BI visuals — bar charts, KPIs, donuts, tables — with real data, applied to your palette instantly."
+              description="One click and Gemini AI generates a full dashboard — bar charts, KPIs, donut charts, data tables — populated with realistic business data, styled to your palette. Not wireframes. Real visuals."
               icon={Sparkles}
               accentBg="bg-[#a855f7]/[0.12]"
               accentText="text-[#c084fc]"
@@ -801,8 +801,8 @@ export default function LandingPage({ onEnterApp }) {
               t={t}
             />
             <FeatureCard
-              title="Live Dashboard Prototyping"
-              description="See a full dashboard rendered live as you tweak colors, fonts, and layouts. No more guessing — prototype directly in the browser before touching Power BI."
+              title="Live Preview"
+              description="See your theme applied to actual interactive charts as you design. Change a color, watch every visual update instantly. No more export-check-tweak-repeat cycles."
               icon={Eye}
               accentBg="bg-[#28c840]/[0.12]"
               accentText="text-[#4ade80]"
@@ -810,8 +810,8 @@ export default function LandingPage({ onEnterApp }) {
               t={t}
             />
             <FeatureCard
-              title="Smart Color Extraction"
-              description="Drop any screenshot and instantly extract a harmonious color palette, complete with automatic accessibility contrast checks."
+              title="Screenshot → Theme"
+              description="Drop any dashboard screenshot and automatically extract a harmonious palette with accessibility contrast checks. Your inspiration becomes your starting point."
               icon={Palette}
               accentBg="bg-[#0078D4]/[0.12]"
               accentText="text-[#4da8ff]"
@@ -819,8 +819,8 @@ export default function LandingPage({ onEnterApp }) {
               t={t}
             />
             <FeatureCard
-              title="One-Click Export"
-              description="Export Power BI JSON themes, PBIP visual specifications, or design token files — ready to hand off to your team."
+              title="Native Power BI Export"
+              description="Export production-ready JSON themes and PBIP visual specifications. Drop them straight into Power BI Desktop — no manual translation needed."
               icon={Code2}
               accentBg="bg-[#F2C811]/[0.12]"
               accentText="text-[#F2C811]"
@@ -838,7 +838,7 @@ export default function LandingPage({ onEnterApp }) {
             badge="Compare"
             title="See How We"
             highlight="Stack Up"
-            description="Ditto vs. the most popular Power BI theming tools on the market."
+            description="Other tools give you static wireframes or color pickers. Ditto gives you AI-generated, live-preview prototyping."
             t={t}
           />
 
@@ -901,15 +901,15 @@ export default function LandingPage({ onEnterApp }) {
 
         <Reveal className="relative max-w-[600px] mx-auto text-center">
           <h2 className="text-[34px] md:text-[52px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-5">
-            Ready to{' '}
+            Your Next Dashboard{' '}
+            <br className="hidden md:block" />
             <span className="bg-gradient-to-r from-[#0078D4] to-[#F2C811] bg-clip-text text-transparent">
-              Design
+              Starts Here
             </span>
-            ?
           </h2>
           <p className={`text-[16px] ${t.body} leading-relaxed mb-9 max-w-md mx-auto`}>
-            Start building your Power BI design system right now.
-            No account needed. No downloads. No cost.
+            Drop a screenshot, let AI generate your visuals, preview live, export to Power&nbsp;BI.
+            No account. No downloads. No cost.
           </p>
           <button
             onClick={onEnterApp}
