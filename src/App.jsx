@@ -26,6 +26,7 @@ import HomeDashboard from './components/HomeDashboard';
 import GeminiPromptModal from './components/GeminiPromptModal';
 import LandingPage from './components/LandingPage';
 import ProjectCard from './components/ProjectCard';
+import PrototypeEditor from './components/PrototypeEditor';
 import { Sparkles, Palette, Settings, Eye, Download, Wand2, X } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
@@ -83,7 +84,7 @@ export default function App() {
   const { theme, toggleTheme } = useTheme();
 
   // --- Phase 3: Real-time collaboration ---
-  const isInEditor = currentView === 'editor';
+  const isInEditor = currentView === 'editor' || currentView === 'prototype';
   const { projectData, loading: rtLoading, isLocalUpdate } = useRealtimeProject(
     isInEditor ? activeWorkspaceId : null,
     isInEditor ? currentProjectId : null
@@ -215,7 +216,7 @@ export default function App() {
     setState(projectState);
     setCurrentProjectId(project.id);
     setActiveProject(project.id);
-    setCurrentView('editor');
+    setCurrentView(project.type === 'prototype' ? 'prototype' : 'editor');
     setSelectedId(null);
   }, []);
 
@@ -235,6 +236,34 @@ export default function App() {
     }
 
     setCurrentView('editor');
+    setSelectedId(null);
+  }, [activeWorkspaceId, user]);
+
+  const handleNewPrototype = useCallback(async () => {
+    const newId = crypto.randomUUID();
+    const newState = {
+      ...DEFAULT_STATE,
+      id: newId,
+      name: 'Untitled Prototype',
+      type: 'prototype',
+      pageWidth: 1280,
+      pageHeight: 720,
+      gridEnabled: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    setState(newState);
+    setCurrentProjectId(newId);
+    setActiveProject(newId);
+    saveProjectState(newId, newState);
+
+    if (activeWorkspaceId && user) {
+      try {
+        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
+      } catch (e) { console.warn('Could not save new prototype to workspace:', e); }
+    }
+
+    setCurrentView('prototype');
     setSelectedId(null);
   }, [activeWorkspaceId, user]);
 
@@ -394,10 +423,17 @@ export default function App() {
         img.src = screenshot.dataUrl;
       });
       const colors = extractColors(img);
+      // Store extracted palette on the screenshot itself
       setState(prev => ({
         ...prev,
-        palette: deduplicateColors([...prev.palette, ...colors])
+        screenshots: prev.screenshots.map(s =>
+          s.id === screenshot.id
+            ? { ...s, extractedPalette: deduplicateColors(colors) }
+            : s
+        ),
       }));
+      // Auto-select this screenshot so its palette shows immediately
+      setSelectedId(screenshot.id);
     } catch (e) {
       console.error('[App] analyzeScreenshot failed:', e);
     } finally {
@@ -469,11 +505,23 @@ export default function App() {
   }, []);
 
   const removeColor = useCallback((hex) => {
-    setState(prev => ({
-      ...prev,
-      palette: prev.palette.filter(c => c.hex !== hex)
-    }));
-  }, []);
+    setState(prev => {
+      // If a screenshot is selected, remove from its palette
+      const selectedScreenshot = selectedId ? prev.screenshots.find(s => s.id === selectedId) : null;
+      if (selectedScreenshot?.extractedPalette) {
+        return {
+          ...prev,
+          screenshots: prev.screenshots.map(s =>
+            s.id === selectedId
+              ? { ...s, extractedPalette: s.extractedPalette.filter(c => c.hex !== hex) }
+              : s
+          ),
+        };
+      }
+      // Otherwise remove from global palette
+      return { ...prev, palette: prev.palette.filter(c => c.hex !== hex) };
+    });
+  }, [selectedId]);
 
   const addColorManually = useCallback((hex) => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -495,11 +543,23 @@ export default function App() {
       rgb: { r, g, b },
       hsl: { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }
     };
-    setState(prev => ({
-      ...prev,
-      palette: deduplicateColors([...prev.palette, newColor])
-    }));
-  }, []);
+    setState(prev => {
+      // If a screenshot is selected with a palette, add to it
+      const selectedScreenshot = selectedId ? prev.screenshots.find(s => s.id === selectedId) : null;
+      if (selectedScreenshot?.extractedPalette) {
+        return {
+          ...prev,
+          screenshots: prev.screenshots.map(s =>
+            s.id === selectedId
+              ? { ...s, extractedPalette: deduplicateColors([...s.extractedPalette, newColor]) }
+              : s
+          ),
+        };
+      }
+      // Otherwise add to global palette
+      return { ...prev, palette: deduplicateColors([...prev.palette, newColor]) };
+    });
+  }, [selectedId]);
 
   const handleSaveToLibrary = async () => {
     if (!user) { setShowAuth(true); return; }
@@ -521,9 +581,16 @@ export default function App() {
     } catch (e) { console.error('Save failed:', e); }
   };
 
+  // Determine which palette to show based on selection
+  const selectedScreenshot = selectedId ? state.screenshots.find(s => s.id === selectedId) : null;
+  const activePalette = selectedScreenshot?.extractedPalette || state.palette;
+  const activePaletteLabel = selectedScreenshot?.extractedPalette
+    ? `${selectedScreenshot.name || 'Screenshot'}`
+    : null;
+
   const designSystem = {
     name: state.name,
-    colors: state.palette,
+    colors: activePalette,
     fonts: state.fonts,
     background: state.background,
     formatRules: state.formatRules,
@@ -604,7 +671,7 @@ export default function App() {
   // --- Editor view ---
   const renderEditorView = () => (
     <>
-      <main className="flex-1 flex flex-col lg:flex-row gap-0 min-h-0">
+      <main className="moodboard-editor flex-1 flex flex-col lg:flex-row gap-0 min-h-0">
         <MoodboardCanvas
           screenshots={state.screenshots}
           onAddScreenshots={addScreenshots}
@@ -627,7 +694,7 @@ export default function App() {
         <div className="w-full lg:w-[400px] lg:min-w-[400px] border-l border-surface-lighter bg-surface-light flex flex-col">
           <div className="flex border-b border-surface-lighter">
             {[
-              { id: 'palette', label: 'Palette', Icon: Palette, badge: state.palette.length || null },
+              { id: 'palette', label: 'Palette', Icon: Palette, badge: activePalette.length || null },
               { id: 'design',  label: 'Design',  Icon: Settings },
               { id: 'preview', label: 'Preview', Icon: Eye },
               { id: 'ai',      label: 'AI Visuals', Icon: Wand2, badge: state.visuals.length || null },
@@ -657,12 +724,44 @@ export default function App() {
 
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === 'palette' && (
-              <ColorPalette
-                colors={state.palette}
-                onRemove={removeColor}
-                onAdd={addColorManually}
-                analysis={analyzePalette(state.palette)}
-              />
+              <div className="space-y-3">
+                {activePaletteLabel && (
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs text-primary font-medium truncate">
+                      Palette from: {activePaletteLabel}
+                    </span>
+                    <button
+                      onClick={() => setSelectedId(null)}
+                      className="text-[10px] text-text-muted hover:text-text transition-colors"
+                    >
+                      Show project palette
+                    </button>
+                  </div>
+                )}
+                <ColorPalette
+                  colors={activePalette}
+                  onRemove={removeColor}
+                  onAdd={addColorManually}
+                  analysis={analyzePalette(activePalette)}
+                />
+                {activePaletteLabel && state.palette.length > 0 && (
+                  <div className="border-t border-surface-lighter pt-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted mb-2">
+                      Project Palette ({state.palette.length} colors)
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {state.palette.slice(0, 8).map((c, i) => (
+                        <div
+                          key={i}
+                          className="w-6 h-6 rounded-md border border-black/10"
+                          style={{ backgroundColor: c.hex }}
+                          title={c.hex}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             {activeTab === 'design' && (
               <DesignPanel
@@ -753,7 +852,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <Header
         user={user}
         onSignIn={() => setShowAuth(true)}
@@ -770,9 +869,9 @@ export default function App() {
         activeUsers={activeUsers}
       />
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Sidebar — shown on non-editor views */}
-        {currentView !== 'editor' && (
+        {currentView !== 'editor' && currentView !== 'prototype' && (
           <Sidebar
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed(c => !c)}
@@ -799,9 +898,19 @@ export default function App() {
             onDuplicateProject={handleDuplicateProject}
             onDeleteProject={handleDeleteProject}
             onUseTemplate={handleUseTemplate}
+            onNewPrototype={handleNewPrototype}
           />
         )}
         {currentView === 'editor' && renderEditorView()}
+        {currentView === 'prototype' && (
+          <PrototypeEditor
+            state={state}
+            onUpdate={update}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onOpenGeminiModal={handleOpenGeminiModal}
+          />
+        )}
         {currentView === 'templates' && renderTemplatesView()}
         {currentView === 'projects' && renderProjectsView()}
       </div>

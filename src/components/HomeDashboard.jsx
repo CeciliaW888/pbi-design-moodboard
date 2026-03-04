@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Plus, LayoutTemplate, ArrowRight, Search, BarChart3, TrendingUp, PieChart } from 'lucide-react';
+import { Sparkles, Plus, LayoutTemplate, ArrowRight, Search, BarChart3, TrendingUp, PieChart, Monitor } from 'lucide-react';
 import ProjectCard from './ProjectCard';
 import { TEMPLATES } from '../lib/templates';
 
@@ -21,6 +21,7 @@ export default function HomeDashboard({
   onDuplicateProject,
   onDeleteProject,
   onUseTemplate,
+  onNewPrototype,
 }) {
   const [promptText, setPromptText] = useState('');
 
@@ -99,7 +100,7 @@ export default function HomeDashboard({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
         >
           <button
             onClick={onNewProject}
@@ -109,8 +110,20 @@ export default function HomeDashboard({
               <Plus size={24} className="text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-text">Start from Scratch</h3>
-              <p className="text-xs text-text-muted mt-0.5">Create a blank moodboard and build your design system</p>
+              <h3 className="text-sm font-semibold text-text">New Moodboard</h3>
+              <p className="text-xs text-text-muted mt-0.5">Build your design system with screenshots and palettes</p>
+            </div>
+          </button>
+          <button
+            onClick={onNewPrototype}
+            className="group flex items-center gap-4 p-5 bg-surface-light border border-surface-lighter rounded-xl hover:border-primary/30 hover:shadow-lg transition-all text-left"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#00B294]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#00B294]/20 transition-colors">
+              <Monitor size={24} className="text-[#00B294]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-text">New Prototype</h3>
+              <p className="text-xs text-text-muted mt-0.5">Wireframe a Power BI report and export as PBIR</p>
             </div>
           </button>
           <button

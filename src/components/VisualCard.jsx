@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import { Wand2, Pencil, X, Loader2 } from 'lucide-react';
+import { Wand2, Pencil, X, Loader2, ChevronDown } from 'lucide-react';
 import PBIVisualRenderer from './PBIVisualRenderer';
+import { VISUAL_TYPES } from '../lib/placeholderData';
 
 export default function VisualCard({
   visual,
@@ -10,12 +11,30 @@ export default function VisualCard({
   onUpdate,
   onRemove,
   onRegenerate,
+  onDoubleClick,
   designSystem,
   zoom,
+  showChartSwitcher,
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(visual.name || '');
+  const [showTypePicker, setShowTypePicker] = useState(false);
+  const typePickerRef = useRef(null);
+
+  useEffect(() => {
+    if (!showTypePicker) return;
+    function handleClick(e) {
+      if (typePickerRef.current && !typePickerRef.current.contains(e.target)) setShowTypePicker(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showTypePicker]);
+
+  const handleChangeType = (newType) => {
+    onUpdate({ spec: { ...visual.spec, visualType: newType } });
+    setShowTypePicker(false);
+  };
 
   const showControls = (isSelected || isHovered) && visual.status !== 'generating';
 
@@ -77,6 +96,7 @@ export default function VisualCard({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={(e) => { e.stopPropagation(); onSelect(); }}
+        onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.(); }}
       >
         {/* Visual content */}
         <PBIVisualRenderer
@@ -106,9 +126,38 @@ export default function VisualCard({
           </div>
         )}
 
+        {/* Chart type switcher */}
+        {showControls && showChartSwitcher && visual.spec?.visualType && (
+          <div ref={typePickerRef} className="absolute top-2 left-2 z-10">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowTypePicker(v => !v); }}
+              className="flex items-center gap-1 px-2 py-1 bg-surface-light/90 backdrop-blur text-text text-[10px] font-medium rounded-lg shadow-md hover:bg-surface transition-colors"
+            >
+              {VISUAL_TYPES.find(t => t.type === visual.spec.visualType)?.label || visual.spec.visualType}
+              <ChevronDown size={10} />
+            </button>
+            {showTypePicker && (
+              <div className="absolute top-full left-0 mt-1 w-36 bg-surface-light border border-surface-lighter rounded-lg shadow-xl overflow-hidden z-20">
+                {VISUAL_TYPES.map(({ type, label }) => (
+                  <button
+                    key={type}
+                    onClick={(e) => { e.stopPropagation(); handleChangeType(type); }}
+                    className={`w-full text-left px-3 py-1.5 text-xs hover:bg-surface transition-colors ${
+                      visual.spec.visualType === type ? 'text-primary font-medium' : 'text-text'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Toolbar */}
         {showControls && (
           <div className="absolute top-2 right-2 flex gap-1.5">
+            {onRegenerate && (
             <button
               onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
               className="p-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors"
@@ -116,6 +165,7 @@ export default function VisualCard({
             >
               <Wand2 size={14} />
             </button>
+            )}
             <button
               onClick={(e) => { e.stopPropagation(); setEditingName(true); setNameInput(visual.name || ''); }}
               className="p-1.5 bg-surface-light text-text rounded-lg shadow-md hover:bg-surface transition-colors"

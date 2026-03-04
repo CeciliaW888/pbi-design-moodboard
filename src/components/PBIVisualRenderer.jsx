@@ -52,13 +52,25 @@ export default function PBIVisualRenderer({ spec, designSystem, width, height })
       {/* Chart body */}
       <div className="flex-1 min-h-0 px-3 pb-2.5">
         {type === 'bar'     && <BarChart ctx={ctx} />}
+        {type === 'column'  && <BarChart ctx={ctx} />}
         {type === 'line'    && <LineChart ctx={ctx} />}
         {type === 'area'    && <AreaChart ctx={ctx} />}
+        {type === 'combo'   && <ComboChart ctx={ctx} />}
         {type === 'kpi'     && <KPIVisual ctx={ctx} />}
+        {type === 'card'    && <CardVisual ctx={ctx} />}
         {type === 'donut'   && <DonutChart ctx={ctx} />}
+        {type === 'pie'     && <PieChart ctx={ctx} />}
         {type === 'table'   && <TableVisual ctx={ctx} />}
         {type === 'scatter' && <ScatterChart ctx={ctx} />}
-        {!['bar','line','area','kpi','donut','table','scatter'].includes(type) && <BarChart ctx={ctx} />}
+        {type === 'gauge'   && <GaugeVisual ctx={ctx} />}
+        {type === 'treemap' && <TreemapVisual ctx={ctx} />}
+        {type === 'funnel'  && <FunnelVisual ctx={ctx} />}
+        {type === 'header'  && <HeaderVisual ctx={ctx} />}
+        {type === 'filter'  && <FilterVisual ctx={ctx} />}
+        {type === 'button'  && <ButtonVisual ctx={ctx} />}
+        {type === 'textbox' && <TextboxVisual ctx={ctx} />}
+        {type === 'image'   && <ImageVisual ctx={ctx} />}
+        {!['bar','column','line','area','combo','kpi','card','donut','pie','table','scatter','gauge','treemap','funnel','header','filter','button','textbox','image'].includes(type) && <BarChart ctx={ctx} />}
       </div>
     </div>
   );
@@ -396,6 +408,268 @@ function ScatterChart({ ctx }) {
           return <circle key={i} cx={cx} cy={cy} r={3} fill={color} fillOpacity={0.7} />;
         })}
       </svg>
+    </div>
+  );
+}
+
+// ─── COMBO CHART ────────────────────────────────────────────────────────────
+function ComboChart({ ctx }) {
+  const { spec, fgMuted } = ctx;
+  const series = spec.series || [];
+  const categories = spec.categories || [];
+  if (!series.length || !categories.length) return <EmptyState />;
+
+  const maxVal = Math.max(...series.flatMap(s => s.values || []), 1);
+  const W = 300, H = 120;
+  const PAD = { l: 8, r: 8, t: 8, b: 20 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-1 min-h-0">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          {series.map((s, si) => {
+            const color = s.color || '#0078D4';
+            if (s.chartType === 'line') {
+              const pts = (s.values || []).map((v, i) => {
+                const x = PAD.l + (i / Math.max(categories.length - 1, 1)) * innerW;
+                const y = PAD.t + innerH - (v / maxVal) * innerH;
+                return `${x},${y}`;
+              }).join(' ');
+              return <polyline key={si} points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />;
+            }
+            // bar
+            const barW = innerW / categories.length * 0.6;
+            return (s.values || []).map((v, i) => {
+              const x = PAD.l + (i / categories.length) * innerW + (innerW / categories.length - barW) / 2;
+              const h = (v / maxVal) * innerH;
+              return <rect key={`${si}-${i}`} x={x} y={PAD.t + innerH - h} width={barW} height={h} rx={2} fill={color} opacity={0.8} />;
+            });
+          })}
+          {categories.filter((_, i) => i === 0 || i === categories.length - 1).map((cat, _, arr) => {
+            const origIdx = categories.indexOf(cat);
+            const x = PAD.l + (origIdx / Math.max(categories.length - 1, 1)) * innerW;
+            return <text key={origIdx} x={x} y={H - 4} textAnchor="middle" fontSize={7} fill={fgMuted}>{cat}</text>;
+          })}
+        </svg>
+      </div>
+      {series.length > 1 && <Legend series={series} fgMuted={fgMuted} />}
+    </div>
+  );
+}
+
+// ─── CARD ───────────────────────────────────────────────────────────────────
+function CardVisual({ ctx }) {
+  const { spec, fg, headingFont } = ctx;
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center">
+      <p style={{ fontSize: 32, fontFamily: headingFont, fontWeight: 700, color: fg, lineHeight: 1, margin: 0 }}>
+        {spec.kpiValue || '—'}
+      </p>
+    </div>
+  );
+}
+
+// ─── PIE CHART ──────────────────────────────────────────────────────────────
+function PieChart({ ctx }) {
+  const { spec, fg, fgMuted } = ctx;
+  const series = spec.series || [];
+  if (!series.length) return <EmptyState />;
+
+  const segments = series.map(s => ({ name: s.name, color: s.color || '#0078D4', value: (s.values || [])[0] ?? 1 }));
+  const total = segments.reduce((a, s) => a + s.value, 0) || 1;
+  const R = 42, cx = 50, cy = 50;
+  let offset = 0;
+  const arcs = segments.map(seg => { const arc = { ...seg, pct: seg.value / total, offset }; offset += arc.pct; return arc; });
+
+  function polarToXY(pct, radius) {
+    const angle = pct * 2 * Math.PI - Math.PI / 2;
+    return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
+  }
+  function describeArc(startPct, endPct) {
+    if (endPct - startPct >= 0.999) {
+      return `M ${cx - R} ${cy} A ${R} ${R} 0 1 1 ${cx + R} ${cy} A ${R} ${R} 0 1 1 ${cx - R} ${cy} Z`;
+    }
+    const [x1, y1] = polarToXY(startPct, R);
+    const [x2, y2] = polarToXY(endPct, R);
+    const large = endPct - startPct > 0.5 ? 1 : 0;
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
+  }
+
+  return (
+    <div className="w-full h-full flex gap-2 items-center">
+      <div className="flex-shrink-0" style={{ width: 100, height: 100 }}>
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {arcs.map((seg, i) => <path key={i} d={describeArc(seg.offset, seg.offset + seg.pct)} fill={seg.color} opacity={0.85} />)}
+        </svg>
+      </div>
+      <div className="flex-1 space-y-1 overflow-hidden">
+        {segments.slice(0, 5).map((seg, i) => (
+          <div key={i} className="flex items-center gap-1.5 overflow-hidden">
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: seg.color }} />
+            <span className="text-xs truncate flex-1" style={{ color: fgMuted, fontSize: 8 }}>{seg.name}</span>
+            <span className="text-xs flex-shrink-0 font-medium" style={{ fontSize: 8, color: fg }}>{Math.round(seg.value / total * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── GAUGE ──────────────────────────────────────────────────────────────────
+function GaugeVisual({ ctx }) {
+  const { spec, fg, fgMuted, headingFont } = ctx;
+  const val = spec.gaugeValue ?? 50;
+  const min = spec.gaugeMin ?? 0;
+  const max = spec.gaugeMax ?? 100;
+  const pct = Math.max(0, Math.min(1, (val - min) / (max - min)));
+  const color = spec.series?.[0]?.color || '#0078D4';
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center">
+      <svg viewBox="0 0 100 60" className="w-3/4" style={{ maxHeight: '60%' }}>
+        <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke={fgMuted + '33'} strokeWidth={8} strokeLinecap="round" />
+        <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke={color} strokeWidth={8} strokeLinecap="round"
+          strokeDasharray={`${pct * 126} 126`} />
+      </svg>
+      <p style={{ fontSize: 22, fontFamily: headingFont, fontWeight: 700, color: fg, lineHeight: 1, marginTop: -4 }}>
+        {val}
+      </p>
+      {spec.gaugeTarget && (
+        <p style={{ fontSize: 8, color: fgMuted, marginTop: 2 }}>Target: {spec.gaugeTarget}</p>
+      )}
+    </div>
+  );
+}
+
+// ─── TREEMAP ────────────────────────────────────────────────────────────────
+function TreemapVisual({ ctx }) {
+  const { spec, fg } = ctx;
+  const series = spec.series || [];
+  if (!series.length) return <EmptyState />;
+  const total = series.reduce((a, s) => a + ((s.values || [])[0] || 1), 0);
+
+  // Simple horizontal strip treemap
+  let x = 0;
+  const W = 100;
+  return (
+    <div className="w-full h-full p-0.5">
+      <svg viewBox="0 0 100 60" className="w-full h-full" preserveAspectRatio="none">
+        {series.map((s, i) => {
+          const pct = ((s.values || [])[0] || 1) / total;
+          const w = pct * W;
+          const rect = <g key={i}>
+            <rect x={x} y={0} width={w} height={60} fill={s.color || '#0078D4'} opacity={0.8} rx={1} />
+            {w > 15 && <text x={x + w / 2} y={32} textAnchor="middle" fontSize={6} fill="#fff" fontWeight={600}>{s.name}</text>}
+          </g>;
+          x += w;
+          return rect;
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ─── FUNNEL ─────────────────────────────────────────────────────────────────
+function FunnelVisual({ ctx }) {
+  const { spec, fg, fgMuted } = ctx;
+  const categories = spec.categories || [];
+  const vals = spec.series?.[0]?.values || [];
+  if (!categories.length) return <EmptyState />;
+  const color = spec.series?.[0]?.color || '#0078D4';
+  const maxVal = Math.max(...vals, 1);
+
+  return (
+    <div className="w-full h-full flex flex-col gap-0.5 justify-center px-2">
+      {categories.map((cat, i) => {
+        const pct = (vals[i] || 0) / maxVal;
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-right flex-shrink-0" style={{ fontSize: 7, color: fgMuted, width: 50, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</span>
+            <div className="flex-1 h-4 rounded-sm overflow-hidden" style={{ background: fgMuted + '1a' }}>
+              <div className="h-full rounded-sm" style={{ width: `${pct * 100}%`, background: color, opacity: 1 - i * 0.12 }} />
+            </div>
+            <span style={{ fontSize: 7, color: fg, width: 24, textAlign: 'right' }}>{vals[i]}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── HEADER ─────────────────────────────────────────────────────────────────
+function HeaderVisual({ ctx }) {
+  const { spec, fg, fgMuted, headingFont, bg } = ctx;
+  return (
+    <div className="w-full h-full flex items-center px-4" style={{ background: bg }}>
+      <div>
+        <p style={{ fontFamily: headingFont, fontSize: 18, fontWeight: 700, color: fg, margin: 0, lineHeight: 1.2 }}>
+          {spec.title || 'Dashboard Title'}
+        </p>
+        {spec.subtitle && (
+          <p style={{ fontSize: 10, color: fgMuted, margin: '4px 0 0' }}>{spec.subtitle}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── FILTER ─────────────────────────────────────────────────────────────────
+function FilterVisual({ ctx }) {
+  const { spec, fg, fgMuted, cardBg } = ctx;
+  const options = spec.filterOptions || ['All', 'Option 1', 'Option 2'];
+  return (
+    <div className="w-full h-full flex items-center gap-2 px-3">
+      <span style={{ fontSize: 9, color: fgMuted, flexShrink: 0 }}>{spec.title || 'Filter'}:</span>
+      <div className="flex-1 flex items-center px-2 py-1 rounded" style={{ border: `1px solid ${fgMuted}44`, background: cardBg }}>
+        <span style={{ fontSize: 9, color: fg }}>{options[0]}</span>
+        <svg viewBox="0 0 10 6" width={8} height={5} className="ml-auto" style={{ opacity: 0.5 }}>
+          <path d="M0 0 L5 6 L10 0" fill="none" stroke={fgMuted} strokeWidth={1.5} />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─── BUTTON ─────────────────────────────────────────────────────────────────
+function ButtonVisual({ ctx }) {
+  const { spec } = ctx;
+  const color = spec.series?.[0]?.color || '#0078D4';
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="px-5 py-2 rounded-md text-white text-xs font-semibold" style={{ background: color }}>
+        {spec.buttonText || spec.title || 'Button'}
+      </div>
+    </div>
+  );
+}
+
+// ─── TEXTBOX ────────────────────────────────────────────────────────────────
+function TextboxVisual({ ctx }) {
+  const { spec, fg, fgMuted, bodyFont } = ctx;
+  return (
+    <div className="w-full h-full flex items-start p-3">
+      <p style={{ fontSize: 10, color: fg, fontFamily: bodyFont, lineHeight: 1.5, margin: 0 }}>
+        {spec.textContent || 'Text content goes here...'}
+      </p>
+    </div>
+  );
+}
+
+// ─── IMAGE ──────────────────────────────────────────────────────────────────
+function ImageVisual({ ctx }) {
+  const { fgMuted } = ctx;
+  return (
+    <div className="w-full h-full flex items-center justify-center" style={{ background: fgMuted + '1a' }}>
+      <div className="text-center">
+        <svg viewBox="0 0 24 24" width={32} height={32} className="mx-auto" style={{ opacity: 0.3 }}>
+          <rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke={fgMuted} strokeWidth="1.5" />
+          <circle cx="8" cy="8" r="2" fill={fgMuted} />
+          <path d="M2 16 L8 10 L14 16 L18 12 L22 16" fill="none" stroke={fgMuted} strokeWidth="1.5" />
+        </svg>
+        <p style={{ fontSize: 8, color: fgMuted, marginTop: 4 }}>Image placeholder</p>
+      </div>
     </div>
   );
 }

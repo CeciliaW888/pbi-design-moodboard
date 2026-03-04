@@ -67,15 +67,15 @@ body {
 html.dark ::-webkit-scrollbar-thumb { background: #3d3d5c; }
 html.dark ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
 
-/* Left canvas panel takes 60%+ on desktop */
+/* Left canvas panel takes 60%+ on desktop — scoped to moodboard editor only */
 @media (min-width: 1024px) {
-  main > *:first-child {
+  main.moodboard-editor > *:first-child {
     flex: 1 1 60%;
     min-width: 60%;
   }
 }
 
-/* Canvas needs full height */
-main {
+/* Canvas needs full height — scoped to moodboard editor only */
+main.moodboard-editor {
   height: calc(100vh - 60px);
 }

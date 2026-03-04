@@ -64,6 +64,13 @@ export default function ProjectCard({ project, onOpen, onRename, onDuplicate, on
         className="h-36 w-full relative overflow-hidden"
         style={{ background: gradientBg }}
       >
+        {/* Project type badge */}
+        {project.type === 'prototype' && (
+          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-[#00B294] text-white text-[9px] font-bold rounded-full uppercase tracking-wider">
+            Prototype
+          </div>
+        )}
+
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
           <motion.span
