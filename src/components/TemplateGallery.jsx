@@ -3,37 +3,112 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Star, TrendingUp, ArrowRight, X, Check, Sparkles } from 'lucide-react';
 import { COMMUNITY_TEMPLATES, CATEGORIES, SORT_OPTIONS, filterTemplates } from '../lib/communityTemplates';
 
+function isLight(hex) {
+  if (!hex || hex.length < 7) return true;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 128;
+}
+
+function lighten(hex, amount) {
+  if (!hex || hex.length < 7) return '#333';
+  let r = parseInt(hex.slice(1, 3), 16) + amount;
+  let g = parseInt(hex.slice(3, 5), 16) + amount;
+  let b = parseInt(hex.slice(5, 7), 16) + amount;
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
 function PalettePreview({ palette, background }) {
+  const fg = isLight(background) ? '#333' : '#eee';
+  const fgMuted = isLight(background) ? '#999' : '#aaa';
+  const cardBg = isLight(background) ? '#ffffff' : lighten(background, 15);
+  const c = (i) => palette[i]?.hex || '#0078D4';
+
   return (
-    <div className="relative w-full h-32 rounded-lg overflow-hidden" style={{ backgroundColor: background }}>
-      {/* Mini dashboard mockup using palette colors */}
-      <div className="absolute inset-0 p-3 flex flex-col gap-2">
-        {/* Header bar */}
-        <div className="flex items-center gap-2">
-          <div className="h-2.5 rounded-full" style={{ backgroundColor: palette[0]?.hex, width: '40%' }} />
+    <div className="relative w-full rounded-lg overflow-hidden" style={{ backgroundColor: background }}>
+      {/* Mini Power BI dashboard */}
+      <div className="p-2 space-y-1.5">
+        {/* Title bar */}
+        <div className="flex items-center gap-1.5 px-1">
+          <div className="h-1.5 rounded-full" style={{ backgroundColor: c(0), width: '35%' }} />
           <div className="flex-1" />
-          <div className="w-6 h-2.5 rounded-full" style={{ backgroundColor: palette[2]?.hex, opacity: 0.6 }} />
+          <div className="h-1.5 w-4 rounded-full" style={{ backgroundColor: fgMuted, opacity: 0.3 }} />
         </div>
-        {/* Chart area */}
-        <div className="flex-1 flex items-end gap-1 px-1">
-          {palette.slice(0, 5).map((color, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-t-sm transition-all"
-              style={{
-                backgroundColor: color.hex,
-                height: `${30 + Math.sin(i * 1.5) * 25 + 30}%`,
-                opacity: 0.85,
-              }}
-            />
+
+        {/* KPI cards row */}
+        <div className="grid grid-cols-3 gap-1">
+          {['$2.4M', '12.8K', '3.2%'].map((val, i) => (
+            <div key={i} className="rounded px-1.5 py-1" style={{ background: cardBg }}>
+              <div style={{ fontSize: 5, color: fgMuted, lineHeight: 1 }}>{'Revenue,Orders,Rate'.split(',')[i]}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: c(i), lineHeight: 1.3 }}>{val}</div>
+            </div>
           ))}
         </div>
-        {/* Bottom legend */}
-        <div className="flex gap-1.5">
-          {palette.slice(0, 3).map((color, i) => (
-            <div key={i} className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color.hex }} />
-              <div className="h-1.5 w-6 rounded-full bg-current opacity-20" />
+
+        {/* Charts row: bar chart + donut */}
+        <div className="grid grid-cols-5 gap-1">
+          {/* Bar chart - 3 cols */}
+          <div className="col-span-3 rounded p-1.5" style={{ background: cardBg }}>
+            <div style={{ fontSize: 5, color: fgMuted, marginBottom: 3 }}>Monthly Trend</div>
+            <div className="flex items-end gap-px" style={{ height: 32 }}>
+              {[40, 55, 35, 65, 80, 60, 75, 90, 70, 85].map((h, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t-sm"
+                  style={{
+                    height: `${h}%`,
+                    backgroundColor: c(i % Math.min(palette.length, 3)),
+                    opacity: 0.85
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Donut chart - 2 cols */}
+          <div className="col-span-2 rounded p-1.5 flex flex-col items-center justify-center" style={{ background: cardBg }}>
+            <div style={{ fontSize: 5, color: fgMuted, marginBottom: 2 }}>By Category</div>
+            {palette.length >= 2 ? (
+              <div className="relative" style={{ width: 32, height: 32 }}>
+                <div
+                  className="rounded-full"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    background: `conic-gradient(${
+                      palette.slice(0, 4).map((color, i, arr) => {
+                        const pct = 100 / arr.length;
+                        return `${color.hex} ${i * pct}% ${(i + 1) * pct}%`;
+                      }).join(', ')
+                    })`
+                  }}
+                />
+                <div
+                  className="absolute inset-0 m-auto rounded-full flex items-center justify-center"
+                  style={{ width: 16, height: 16, background: cardBg, fontSize: 5, fontWeight: 700, color: fg }}
+                >
+                  68%
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-full border-2 border-dashed" style={{ width: 32, height: 32, borderColor: fgMuted + '44' }} />
+            )}
+          </div>
+        </div>
+
+        {/* Bottom table row */}
+        <div className="rounded p-1.5" style={{ background: cardBg }}>
+          {['Product A', 'Product B', 'Product C'].map((item, i) => (
+            <div key={item} className="flex justify-between items-center" style={{ padding: '1px 0', borderBottom: i < 2 ? `1px solid ${fgMuted}15` : 'none' }}>
+              <span style={{ fontSize: 5, color: fg }}>{item}</span>
+              <div className="flex items-center gap-1">
+                <div style={{ height: 3, width: [28, 20, 12][i], borderRadius: 1, backgroundColor: c(i), opacity: 0.7 }} />
+                <span style={{ fontSize: 5, color: c(i), fontWeight: 600 }}>{['$840K', '$620K', '$340K'][i]}</span>
+              </div>
             </div>
           ))}
         </div>
