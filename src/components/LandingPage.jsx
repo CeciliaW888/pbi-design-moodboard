@@ -733,45 +733,128 @@ export default function LandingPage({ onEnterApp }) {
         <div className="max-w-7xl mx-auto">
           <SectionHeading
             badge="How It Works"
-            title="Screenshot to Production Theme in"
-            highlight="60 Seconds"
-            description="Upload inspiration, let AI generate realistic dashboard visuals, preview live, and export — all without opening Power BI."
+            title="Three Ways to Start,"
+            highlight="One Powerful Prototype"
+            description="Choose your starting point: extract from inspiration, customize a template, or build from scratch. Then prototype live, collaborate in real-time, and export production-ready themes."
             t={t}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <StepCard
-              step={1}
-              title="Drop a Screenshot"
-              description="Drag in any dashboard, brand guide, or UI you love. Ditto instantly extracts the color palette and typography."
-              icon={Image}
-              delay={0}
-              t={t}
-            />
-            <StepCard
-              step={2}
-              title="Refine Your Palette"
-              description="Fine-tune extracted colors with live accessibility checks. Set primary, accent, sentiment, and conditional formatting colors."
-              icon={Palette}
-              delay={0.08}
-              t={t}
-            />
-            <StepCard
-              step={3}
-              title="AI Generates Your Dashboard"
-              description="Hit one button and Gemini AI creates realistic Power BI visuals — bar charts, KPIs, donuts, tables — with actual business data in your theme."
-              icon={Sparkles}
-              delay={0.16}
-              t={t}
-            />
-            <StepCard
-              step={4}
-              title="Preview Live & Export"
-              description="See your theme on interactive charts instantly. Then export Power BI JSON themes, PBIP visual specs, or hand off to your team."
-              icon={Download}
-              delay={0.24}
-              t={t}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Path 1: Inspiration */}
+            <Reveal delay={0}>
+              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 h-full`}>
+                <div className="w-12 h-12 rounded-2xl bg-[#0078D4]/[0.12] text-[#4da8ff] flex items-center justify-center mb-4">
+                  <Palette size={22} strokeWidth={1.8} />
+                </div>
+                <h3 className="text-lg font-bold text-text mb-2">I Have Inspiration</h3>
+                <p className="text-sm text-text-muted mb-4">
+                  Upload any screenshot, logo, or design. AI extracts colors, fonts, and style instantly.
+                </p>
+                <div className="space-y-2 text-xs text-text-muted">
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Drag & drop image or paste URL</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Auto-extract palette with accessibility checks</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Save as reusable theme</span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Path 2: Templates */}
+            <Reveal delay={0.08}>
+              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 h-full`}>
+                <div className="w-12 h-12 rounded-2xl bg-[#a855f7]/[0.12] text-[#c084fc] flex items-center justify-center mb-4">
+                  <Layers size={22} strokeWidth={1.8} />
+                </div>
+                <h3 className="text-lg font-bold text-text mb-2">I Want a Template</h3>
+                <p className="text-sm text-text-muted mb-4">
+                  Browse 12 curated dashboard themes. Pick one and customize with your brand colors.
+                </p>
+                <div className="space-y-2 text-xs text-text-muted">
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Corporate, creative, minimal styles</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>One-click load into prototype editor</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Override any color or font</span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Path 3: Blank */}
+            <Reveal delay={0.16}>
+              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 h-full`}>
+                <div className="w-12 h-12 rounded-2xl bg-[#28c840]/[0.12] text-[#4ade80] flex items-center justify-center mb-4">
+                  <Sparkles size={22} strokeWidth={1.8} />
+                </div>
+                <h3 className="text-lg font-bold text-text mb-2">Start Blank</h3>
+                <p className="text-sm text-text-muted mb-4">
+                  Describe your dashboard and let AI generate visuals. Or build manually with drag & drop.
+                </p>
+                <div className="space-y-2 text-xs text-text-muted">
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>AI generates bar charts, KPIs, tables</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Manual design tools for full control</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Resize, position, style visuals</span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* Then What Happens */}
+          <div className="max-w-4xl mx-auto">
+            <Reveal delay={0.24}>
+              <h3 className="text-xl font-bold text-center text-text mb-8">
+                Then: Prototype, Collaborate &amp; Export
+              </h3>
+            </Reveal>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <StepCard
+                step={1}
+                title="Live Prototyping"
+                description="Build full dashboards with drag & drop. See your theme on real visuals. Change colors and watch everything update instantly."
+                icon={Eye}
+                delay={0.28}
+                t={t}
+              />
+              <StepCard
+                step={2}
+                title="Real-Time Collaboration"
+                description="Share a link. Edit together. See who's viewing. Changes sync instantly across all collaborators."
+                icon={MousePointerClick}
+                delay={0.36}
+                t={t}
+              />
+              <StepCard
+                step={3}
+                title="Export to Power BI"
+                description="Download production-ready JSON themes and PBIP specs. Drop straight into Power BI Desktop. No manual work."
+                icon={Download}
+                delay={0.44}
+                t={t}
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -784,9 +867,9 @@ export default function LandingPage({ onEnterApp }) {
         <div className="relative max-w-7xl mx-auto">
           <SectionHeading
             badge="Features"
-            title="The AI-Powered Design Studio That"
-            highlight="Others Can't Match"
-            description="Not a color picker. Not a static wireframe tool. Ditto generates realistic, interactive Power BI prototypes with AI."
+            title="Live Prototyping Meets"
+            highlight="AI Generation"
+            description="Not a color picker. Not static wireframes. Ditto is a full-featured prototyping studio where you build real dashboards with AI, collaborate in real-time, and export production-ready themes."
             t={t}
           />
 
@@ -801,8 +884,8 @@ export default function LandingPage({ onEnterApp }) {
               t={t}
             />
             <FeatureCard
-              title="Live Preview & Prototyping"
-              description="See your theme applied to actual interactive charts as you design. Change a color, watch every visual update instantly. Build full prototypes with drag-and-drop visuals."
+              title="Live Prototyping Canvas"
+              description="Build full dashboards with drag-and-drop visuals on a 1280×720 canvas. Position, resize, style — then watch your theme apply instantly to every chart, KPI, and table."
               icon={Eye}
               accentBg="bg-[#28c840]/[0.12]"
               accentText="text-[#4ade80]"
