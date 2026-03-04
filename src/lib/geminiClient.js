@@ -17,12 +17,17 @@ export async function generateVisualSpec(apiKey, description, designSystem) {
     ? paletteHexes.join(', ')
     : '#0078D4, #107C10, #F2C811, #D83B01, #5C2D91, #008272, #004B1C, #004E8C';
 
+  const sentimentStr = designSystem.sentiment ? `\nDesign sentiment/style: ${designSystem.sentiment}` : '';
+  const fontStr = designSystem.fonts
+    ? `\nFonts: heading="${designSystem.fonts.heading || 'Segoe UI'}", body="${designSystem.fonts.body || 'Segoe UI'}"`
+    : '';
+
   const prompt = `You are a Power BI report designer. Generate a realistic-looking data visualization spec for a business dashboard.
 
 User request: "${description}"
 
 Design system palette: ${paletteStr}
-Background: ${designSystem.background || '#ffffff'}
+Background: ${designSystem.background || '#ffffff'}${sentimentStr}${fontStr}
 
 Return ONLY valid JSON matching this exact schema (no markdown, no explanation):
 {
