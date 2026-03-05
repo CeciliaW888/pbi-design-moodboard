@@ -34,37 +34,27 @@ export default function HomeDashboard({
           <p className="text-text-muted mt-1">What would you like to create?</p>
         </motion.div>
 
-        {/* Three path cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+        {/* Two path cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
           <PathCard
             icon={Palette}
             iconGradient="from-blue-500 to-blue-600"
             title='I Have Inspiration'
-            description="Upload image or paste URL to extract colors, fonts, and style"
+            description="Upload an image or paste URL to extract colors, fonts, and style for your theme"
             buttonText="Upload Image"
             buttonVariant="primary"
             onClick={onGoToMoodboard}
             delay={0}
           />
           <PathCard
-            icon={LayoutTemplate}
-            iconGradient="from-purple-500 to-purple-600"
-            title='I Want a Template'
-            description="Browse 12 curated dashboard themes and customize for your brand"
-            buttonText="Browse Templates"
-            buttonVariant="outline"
-            onClick={() => onViewAll?.('gallery')}
-            delay={0.05}
-          />
-          <PathCard
             icon={Zap}
-            iconGradient="from-yellow-400 to-yellow-500"
-            title='Start Blank'
-            description="Create from scratch with AI or manual design"
-            buttonText="Create"
-            buttonVariant="outline"
+            iconGradient="from-purple-500 to-purple-600"
+            title='Start Prototyping'
+            description="Build dashboards with templates or from scratch. Generate with AI or design manually"
+            buttonText="Create Dashboard"
+            buttonVariant="primary"
             onClick={onNewPrototype}
-            delay={0.1}
+            delay={0.05}
           />
         </div>
 
@@ -107,24 +97,17 @@ export default function HomeDashboard({
               <div className="flex items-center justify-center gap-3 text-xs">
                 <button
                   onClick={onGoToMoodboard}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
+                  className="px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
                 >
                   <Palette size={14} />
                   I Have Inspiration
                 </button>
                 <button
-                  onClick={() => onViewAll?.('gallery')}
-                  className="px-4 py-2 border border-surface-lighter text-text rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
-                >
-                  <LayoutTemplate size={14} />
-                  Browse Templates
-                </button>
-                <button
                   onClick={onNewPrototype}
-                  className="px-4 py-2 border border-surface-lighter text-text rounded-lg hover:bg-surface transition-colors flex items-center gap-2"
+                  className="px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2"
                 >
                   <Zap size={14} />
-                  Start Blank
+                  Start Prototyping
                 </button>
               </div>
             </div>

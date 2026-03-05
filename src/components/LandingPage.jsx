@@ -733,89 +733,62 @@ export default function LandingPage({ onEnterApp }) {
         <div className="max-w-7xl mx-auto">
           <SectionHeading
             badge="How It Works"
-            title="Three Ways to Start,"
-            highlight="One Powerful Prototype"
-            description="Choose your starting point: extract from inspiration, customize a template, or build from scratch. Then prototype live, collaborate in real-time, and export production-ready themes."
+            title="Two Ways to Start,"
+            highlight="One Powerful Result"
+            description="Choose your starting point: extract a theme from inspiration, or jump straight into prototyping. Then collaborate in real-time and export production-ready themes."
             t={t}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {/* Path 1: Inspiration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 max-w-4xl mx-auto">
+            {/* Path 1: Extract Theme */}
             <Reveal delay={0}>
-              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 h-full`}>
-                <div className="w-12 h-12 rounded-2xl bg-[#0078D4]/[0.12] text-[#4da8ff] flex items-center justify-center mb-4">
-                  <Palette size={22} strokeWidth={1.8} />
+              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-8 h-full`}>
+                <div className="w-14 h-14 rounded-2xl bg-[#0078D4]/[0.12] text-[#4da8ff] flex items-center justify-center mb-5">
+                  <Palette size={26} strokeWidth={1.8} />
                 </div>
-                <h3 className="text-lg font-bold text-text mb-2">I Have Inspiration</h3>
-                <p className="text-sm text-text-muted mb-4">
-                  Upload any screenshot, logo, or design. AI extracts colors, fonts, and style instantly.
+                <h3 className="text-xl font-bold text-text mb-3">I Have Inspiration</h3>
+                <p className="text-sm text-text-muted mb-5">
+                  Upload any screenshot, logo, or design. AI extracts a complete theme with colors, fonts, and style.
                 </p>
-                <div className="space-y-2 text-xs text-text-muted">
+                <div className="space-y-2.5 text-sm text-text-muted">
                   <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Drag & drop image or paste URL</span>
+                    <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Drag & drop or paste URL</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Auto-extract palette with accessibility checks</span>
+                    <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>AI extracts palette with accessibility checks</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Save as reusable theme</span>
+                    <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Save and apply to any prototype</span>
                   </div>
                 </div>
               </div>
             </Reveal>
 
-            {/* Path 2: Templates */}
-            <Reveal delay={0.08}>
-              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 h-full`}>
-                <div className="w-12 h-12 rounded-2xl bg-[#a855f7]/[0.12] text-[#c084fc] flex items-center justify-center mb-4">
-                  <Layers size={22} strokeWidth={1.8} />
+            {/* Path 2: Start Prototyping */}
+            <Reveal delay={0.1}>
+              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-8 h-full`}>
+                <div className="w-14 h-14 rounded-2xl bg-[#a855f7]/[0.12] text-[#c084fc] flex items-center justify-center mb-5">
+                  <Sparkles size={26} strokeWidth={1.8} />
                 </div>
-                <h3 className="text-lg font-bold text-text mb-2">I Want a Template</h3>
-                <p className="text-sm text-text-muted mb-4">
-                  Browse 12 curated dashboard themes. Pick one and customize with your brand colors.
+                <h3 className="text-xl font-bold text-text mb-3">Start Prototyping</h3>
+                <p className="text-sm text-text-muted mb-5">
+                  Jump into the prototype editor. Choose from 12 templates or start blank. Generate with AI or build manually.
                 </p>
-                <div className="space-y-2 text-xs text-text-muted">
+                <div className="space-y-2.5 text-sm text-text-muted">
                   <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Corporate, creative, minimal styles</span>
+                    <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Pick a template or start from scratch</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>One-click load into prototype editor</span>
+                    <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>AI generates visuals or drag & drop manually</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Override any color or font</span>
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-
-            {/* Path 3: Blank */}
-            <Reveal delay={0.16}>
-              <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl p-6 h-full`}>
-                <div className="w-12 h-12 rounded-2xl bg-[#28c840]/[0.12] text-[#4ade80] flex items-center justify-center mb-4">
-                  <Sparkles size={22} strokeWidth={1.8} />
-                </div>
-                <h3 className="text-lg font-bold text-text mb-2">Start Blank</h3>
-                <p className="text-sm text-text-muted mb-4">
-                  Describe your dashboard and let AI generate visuals. Or build manually with drag & drop.
-                </p>
-                <div className="space-y-2 text-xs text-text-muted">
-                  <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>AI generates bar charts, KPIs, tables</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Manual design tools for full control</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check size={14} className="text-primary mt-0.5 flex-shrink-0" />
-                    <span>Resize, position, style visuals</span>
+                    <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                    <span>Live preview on 1280×720 canvas</span>
                   </div>
                 </div>
               </div>
