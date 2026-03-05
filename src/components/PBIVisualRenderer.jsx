@@ -51,7 +51,7 @@ export default function PBIVisualRenderer({ spec, designSystem, width, height })
 
       {/* Chart body */}
       <div className="flex-1 min-h-0 px-3 pb-2.5">
-        {type === 'bar'     && <BarChart ctx={ctx} />}
+        {type === 'bar'     && <HorizontalBarChart ctx={ctx} />}
         {type === 'column'  && <BarChart ctx={ctx} />}
         {type === 'line'    && <LineChart ctx={ctx} />}
         {type === 'area'    && <AreaChart ctx={ctx} />}
@@ -91,7 +91,7 @@ function BarChart({ ctx }) {
     <div className="w-full h-full flex flex-col">
       <div className="flex-1 flex items-end gap-0.5">
         {categories.map((cat, ci) => (
-          <div key={ci} className="flex-1 flex items-end gap-px justify-center">
+          <div key={ci} className="flex-1 h-full flex items-end gap-px justify-center">
             {series.map((s, si) => {
               const val = (s.values || [])[ci] ?? 0;
               const pct = Math.max(2, (val / maxVal) * 100);
@@ -122,6 +122,36 @@ function BarChart({ ctx }) {
         ))}
       </div>
       {/* Legend */}
+      {series.length > 1 && <Legend series={series} fgMuted={fgMuted} />}
+    </div>
+  );
+}
+
+// ─── HORIZONTAL BAR CHART ────────────────────────────────────────────────────
+function HorizontalBarChart({ ctx }) {
+  const { spec, fg, fgMuted } = ctx;
+  const series = spec.series || [];
+  const categories = spec.categories || [];
+  if (!series.length || !categories.length) return <EmptyState />;
+
+  const color = series[0]?.color || '#0078D4';
+  const vals = series[0]?.values || [];
+  const maxVal = Math.max(...vals, 1);
+
+  return (
+    <div className="w-full h-full flex flex-col gap-0.5 justify-center px-2">
+      {categories.map((cat, i) => {
+        const pct = (vals[i] || 0) / maxVal * 100;
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-right flex-shrink-0" style={{ fontSize: 7, color: fgMuted, width: 50, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</span>
+            <div className="flex-1 h-4 rounded-sm overflow-hidden" style={{ background: fgMuted + '1a' }}>
+              <div className="h-full rounded-sm" style={{ width: `${pct}%`, background: color, opacity: 0.85 }} />
+            </div>
+            <span style={{ fontSize: 7, color: fg, width: 24, textAlign: 'right' }}>{vals[i]}</span>
+          </div>
+        );
+      })}
       {series.length > 1 && <Legend series={series} fgMuted={fgMuted} />}
     </div>
   );

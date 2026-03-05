@@ -263,6 +263,8 @@ export default function PrototypeEditor({ state, onUpdate, selectedId, onSelect,
           onUploadReference={handleUploadReference}
           onReferenceOpacityChange={handleReferenceOpacity}
           onToggleReference={handleToggleReference}
+          selectedVisual={selectedId ? (state.visuals || []).find(v => v.id === selectedId) : null}
+          onUpdateVisual={handleUpdateVisual}
         />
 
         <PrototypeCanvas

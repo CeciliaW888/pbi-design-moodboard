@@ -4,7 +4,7 @@ import ImageCard from './ImageCard';
 import VisualCard from './VisualCard';
 import PlaceVisualMode from './PlaceVisualMode';
 import CanvasToolbar from './CanvasToolbar';
-import { Upload, Clipboard, Monitor, Loader2, CheckCircle, AlertCircle, Wand2 } from 'lucide-react';
+import { Upload, Clipboard, Monitor, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 3;
@@ -318,7 +318,6 @@ export default function MoodboardCanvas({
         onZoomReset={zoomReset}
         onFitToScreen={fitToScreen}
         onUpload={() => fileInputRef.current?.click()}
-        onAddVisual={onOpenGeminiModal}
         screenshotCount={screenshots.length}
       />
 
@@ -343,7 +342,7 @@ export default function MoodboardCanvas({
             <p className="text-sm text-text-muted mb-6">in minutes, not hours</p>
             <p className="text-text-muted mb-8 max-w-sm mx-auto">
               Drop screenshots of dashboards you love. Arrange them on the canvas,
-              extract colors, and build a complete design system.
+              extract colors, and set fonts in the Design tab.
             </p>
 
             <div className="flex items-center justify-center gap-3 mb-6">
@@ -352,12 +351,6 @@ export default function MoodboardCanvas({
                 className="px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors flex items-center gap-2"
               >
                 <Upload size={18} /> Upload Screenshots
-              </button>
-              <button
-                onClick={onOpenGeminiModal}
-                className="px-6 py-3 bg-surface border border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-colors flex items-center gap-2"
-              >
-                <Wand2 size={18} /> AI Visual
               </button>
             </div>
 

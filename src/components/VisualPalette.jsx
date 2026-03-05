@@ -1,12 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   BarChart3, TrendingUp, Activity, Gauge, PieChart, Table, ScatterChart,
   LayoutDashboard, SlidersHorizontal, CreditCard, MousePointer2,
   BarChart, GitMerge, TreePine, Filter, Type, ImageIcon, Layers,
-  Wand2, Plus, Grid3X3, Image, Eye, EyeOff, Monitor,
+  Wand2, Plus, Grid3X3, Image, Eye, EyeOff, Monitor, MousePointerClick,
 } from 'lucide-react';
 import { VISUAL_TYPES, VISUAL_TEMPLATES } from '../lib/placeholderData';
 import DittoMascot from './DittoMascot';
+import VisualPropertiesPanel from './VisualPropertiesPanel';
 
 const ICON_MAP = {
   header: LayoutDashboard,
@@ -285,14 +286,26 @@ export default function VisualPalette({
   onUploadReference,
   onReferenceOpacityChange,
   onToggleReference,
+  selectedVisual,
+  onUpdateVisual,
 }) {
   const [activeTab, setActiveTab] = useState('elements');
   const fileInputRef = useRef(null);
+
+  // Auto-switch to Properties tab when a visual is selected
+  useEffect(() => {
+    if (selectedVisual) {
+      setActiveTab('properties');
+    } else if (activeTab === 'properties') {
+      setActiveTab('elements');
+    }
+  }, [selectedVisual?.id]);
 
   const tabs = [
     { id: 'elements', label: 'Elements' },
     { id: 'screens', label: 'Screens' },
     { id: 'design', label: 'Design' },
+    { id: 'properties', label: 'Properties' },
   ];
 
   const handleDragStart = (e, type, templateId) => {
@@ -497,6 +510,23 @@ export default function VisualPalette({
       {activeTab === 'design' && (
         <div className="flex-1 overflow-y-auto">
           {themePanel}
+        </div>
+      )}
+
+      {/* Properties tab */}
+      {activeTab === 'properties' && (
+        <div className="flex-1 overflow-y-auto">
+          {selectedVisual ? (
+            <VisualPropertiesPanel
+              visual={selectedVisual}
+              onUpdate={(updates) => onUpdateVisual?.(selectedVisual.id, updates)}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+              <MousePointerClick size={32} className="text-text-muted/30 mb-3" />
+              <p className="text-sm text-text-muted">Select a visual on the canvas to edit its properties</p>
+            </div>
+          )}
         </div>
       )}
     </div>

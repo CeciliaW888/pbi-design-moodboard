@@ -111,10 +111,10 @@ export default function ImageCard({
               onClick={handleAnalyze}
               disabled={analyzing}
               className="px-2 py-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-1 text-[11px] font-medium"
-              title="Extract colors"
+              title="Extract colors from this screenshot (set fonts manually in the Design tab)"
             >
               {analyzing ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
-              Extract
+              Extract Colors
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
