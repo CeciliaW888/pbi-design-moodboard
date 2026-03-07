@@ -225,3 +225,24 @@ export async function uploadScreenshot(userId, file) {
   await uploadBytes(storageRef, file);
   return getDownloadURL(storageRef);
 }
+
+// ═══════════════════════════════════════════════════════
+// Design Pattern Library (Phase 4)
+// ═══════════════════════════════════════════════════════
+
+export async function saveDesignPattern(userId, workspaceId, patternId) {
+  const docRef = doc(db, 'users', userId, 'workspaces', workspaceId, 'savedPatterns', patternId);
+  await setDoc(docRef, {
+    patternId,
+    savedAt: serverTimestamp(),
+  });
+}
+
+export async function removeDesignPattern(userId, workspaceId, patternId) {
+  await deleteDoc(doc(db, 'users', userId, 'workspaces', workspaceId, 'savedPatterns', patternId));
+}
+
+export async function getUserSavedPatterns(userId, workspaceId) {
+  const snap = await getDocs(collection(db, 'users', userId, 'workspaces', workspaceId, 'savedPatterns'));
+  return snap.docs.map(d => d.id);
+}

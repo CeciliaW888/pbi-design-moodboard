@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { loadState, saveState, saveProjectState, setActiveProject, deleteProjectState, clearState } from './lib/storage';
 import { extractColors, analyzePalette } from './lib/colorExtractor';
+import { analyzeDesignSystem } from './lib/geminiClient';
 import {
   auth, onAuthStateChanged, logOut,
   saveMoodboard, getUserMoodboards, getRecentMoodboards, deleteMoodboard, renameMoodboard, duplicateMoodboard,
@@ -29,6 +30,7 @@ import PrototypeEditor from './components/PrototypeEditor';
 import TemplateGallery from './components/TemplateGallery';
 import SaveThemeModal from './components/SaveThemeModal';
 import LoadThemeModal from './components/LoadThemeModal';
+import DesignVocabulary from './components/DesignVocabulary';
 import { Sparkles, Palette, Settings, Eye, Download, Wand2, X, Bookmark } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
@@ -479,12 +481,43 @@ export default function App() {
       }));
       // Auto-select this screenshot so its palette shows immediately
       setSelectedId(screenshot.id);
+
+      // AI design system extraction (fonts, background, sentiment) when API key is available
+      if (geminiApiKey) {
+        try {
+          const dataUrl = screenshot.dataUrl;
+          const mimeMatch = dataUrl.match(/^data:(image\/\w+);base64,/);
+          if (mimeMatch) {
+            const mimeType = mimeMatch[1];
+            const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+            const designInfo = await analyzeDesignSystem(geminiApiKey, base64, mimeType);
+            setState(prev => ({
+              ...prev,
+              fonts: {
+                ...prev.fonts,
+                heading: designInfo.headingFont,
+                body: designInfo.bodyFont,
+                titleSize: designInfo.titleSize,
+                bodySize: designInfo.bodySize,
+              },
+              background: designInfo.background,
+              screenshots: prev.screenshots.map(s =>
+                s.id === screenshot.id
+                  ? { ...s, aiAnalysis: designInfo }
+                  : s
+              ),
+            }));
+          }
+        } catch (aiErr) {
+          console.warn('[App] AI design analysis failed (colors still extracted):', aiErr.message);
+        }
+      }
     } catch (e) {
       console.error('[App] analyzeScreenshot failed:', e);
     } finally {
       setAnalyzing(false);
     }
-  }, []);
+  }, [geminiApiKey]);
 
   const removeScreenshot = useCallback((id) => {
     setState(prev => ({
@@ -712,6 +745,7 @@ export default function App() {
           onPlaceVisual={handlePlaceVisual}
           onCancelPlace={handleCancelPlace}
           designSystem={designSystem}
+          hasAiKey={!!geminiApiKey}
         />
 
         <div className="w-full lg:w-[400px] lg:min-w-[400px] border-l border-surface-lighter bg-surface-light flex flex-col">
@@ -894,6 +928,9 @@ export default function App() {
           <TemplateGallery onUseTemplate={handleUseCommunityTemplate} />
         )}
         {currentView === 'projects' && renderProjectsView()}
+        {currentView === 'vocabulary' && (
+          <DesignVocabulary user={user} workspaceId={activeWorkspaceId} />
+        )}
       </div>
 
       <AnimatePresence>

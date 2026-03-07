@@ -79,3 +79,14 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
 main.moodboard-editor {
   height: calc(100vh - 60px);
 }
+
+/* Design Vocabulary animations */
+@keyframes aurora {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
