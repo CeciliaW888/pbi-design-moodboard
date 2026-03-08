@@ -2,7 +2,7 @@ import { ZoomIn, ZoomOut, Maximize, RotateCcw, Plus, BarChart2 } from 'lucide-re
 
 export default function CanvasToolbar({ zoom, onZoomIn, onZoomOut, onZoomReset, onFitToScreen, onUpload, onAddVisual, screenshotCount }) {
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-surface-light/90 backdrop-blur-xl border border-surface-lighter rounded-full px-2 py-1.5 shadow-lg">
+    <div role="toolbar" aria-label="Canvas tools" className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-surface-light/90 backdrop-blur-xl border border-surface-lighter rounded-full px-2 py-1.5 shadow-lg">
       <ToolButton onClick={onUpload} title="Add screenshots">
         <Plus size={16} />
       </ToolButton>
@@ -52,6 +52,7 @@ function ToolButton({ children, onClick, title, disabled }) {
     <button
       onClick={onClick}
       title={title}
+      aria-label={title}
       disabled={disabled}
       className="p-2 text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
     >

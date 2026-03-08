@@ -64,6 +64,8 @@ export default function GeminiPromptModal({
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label="Generate Visual"
         className="bg-surface-light rounded-2xl p-6 w-full max-w-md shadow-2xl border border-surface-lighter"
       >
         <div className="flex justify-between items-start mb-5">
@@ -77,6 +79,8 @@ export default function GeminiPromptModal({
           <button
             onClick={onClose}
             className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface transition-colors"
+            title="Close"
+            aria-label="Close dialog"
           >
             <X size={18} />
           </button>

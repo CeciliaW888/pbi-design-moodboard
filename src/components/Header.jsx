@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { LogOut, User, Sun, Moon, Settings, ExternalLink, Key, Menu, ArrowLeft, Share2, Copy, Check, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PresenceAvatars from './PresenceAvatars';
+import { sanitizeName } from '../lib/validation';
 
 export default function Header({
   user,
@@ -73,6 +74,7 @@ export default function Header({
             onClick={onGoHome}
             className="p-2 text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors"
             title="Back to Home"
+            aria-label="Back to Home"
           >
             <ArrowLeft size={18} />
           </button>
@@ -81,6 +83,7 @@ export default function Header({
             onClick={onToggleSidebar}
             className="p-2 text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors lg:hidden"
             title="Toggle sidebar"
+            aria-label="Toggle sidebar"
           >
             <Menu size={18} />
           </button>
@@ -99,7 +102,7 @@ export default function Header({
             <input
               type="text"
               value={themeName}
-              onChange={(e) => onNameChange(e.target.value)}
+              onChange={(e) => onNameChange(sanitizeName(e.target.value))}
               className="bg-transparent text-lg font-bold text-text outline-none border-b border-transparent hover:border-surface-lighter focus:border-primary transition-colors w-64"
             />
             <p className="text-xs text-text-muted">AI Design Studio for Power BI</p>
@@ -245,6 +248,7 @@ export default function Header({
                 showSettings ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-text hover:bg-surface'
               } ${!geminiApiKey ? 'ring-2 ring-primary/40' : ''}`}
               title="Settings"
+              aria-label="Settings"
             >
               <Settings size={18} />
             </button>
@@ -292,6 +296,7 @@ export default function Header({
           onClick={onToggleTheme}
           className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface transition-all duration-300"
           title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           <motion.div
             key={theme}
@@ -308,7 +313,7 @@ export default function Header({
           <div className="flex items-center gap-2">
             <img
               src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=0078D4&color=fff&size=32`}
-              alt=""
+              alt={`${user.displayName || user.email} avatar`}
               className="w-8 h-8 rounded-full"
               onError={(e) => {
                 e.target.onerror = null;
@@ -316,7 +321,7 @@ export default function Header({
               }}
             />
             <span className="text-sm text-text-muted hidden sm:block">{user.displayName || user.email}</span>
-            <button onClick={onSignOut} className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface transition-colors" title="Sign out">
+            <button onClick={onSignOut} className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface transition-colors" title="Sign out" aria-label="Sign out">
               <LogOut size={16} />
             </button>
           </div>

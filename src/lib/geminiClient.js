@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-3.1-pro', 'gemini-3.0-pro'];
+const REQUEST_TIMEOUT_MS = 30_000;
 
 const VALID_VISUAL_TYPES = ['bar', 'line', 'kpi', 'table', 'donut', 'area', 'scatter'];
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
@@ -114,15 +115,24 @@ Rules:
   let lastError;
   for (const model of MODELS) {
     try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-        },
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Gemini request timed out after ${REQUEST_TIMEOUT_MS / 1000}s (model: ${model})`)), REQUEST_TIMEOUT_MS);
       });
 
+      const response = await Promise.race([
+        ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+          },
+        }),
+        timeoutPromise,
+      ]);
+
       const text = response.text;
+      if (!text) throw new Error('Gemini returned an empty response');
+
       let spec;
       try {
         spec = JSON.parse(text);
@@ -140,8 +150,13 @@ Rules:
         console.warn(`[geminiClient] Model ${model} unavailable, trying next…`);
         continue;
       }
+      // Re-throw with a user-friendly message for network/timeout errors
+      if (msg.includes('timed out')) throw err;
+      if (msg.includes('fetch') || msg.includes('network') || msg.includes('econnrefused')) {
+        throw new Error('Network error: could not reach Gemini API. Check your connection and try again.');
+      }
       throw err;
     }
   }
-  throw lastError;
+  throw lastError ?? new Error('All Gemini models failed. Please try again later.');
 }

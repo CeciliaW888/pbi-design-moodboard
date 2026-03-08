@@ -34,6 +34,8 @@ export default function StylePickerModal({ visual, designSystem, onApplyTemplate
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-label="Visual Styles"
         className="relative bg-surface-light rounded-2xl shadow-2xl w-[520px] max-h-[80vh] flex flex-col overflow-hidden border border-surface-lighter"
         onClick={(e) => e.stopPropagation()}
       >
@@ -46,6 +48,8 @@ export default function StylePickerModal({ visual, designSystem, onApplyTemplate
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors"
+            title="Close"
+            aria-label="Close dialog"
           >
             <X size={18} />
           </button>
