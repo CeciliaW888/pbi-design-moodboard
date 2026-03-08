@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { auth } from '../firebase';
 
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-3.1-pro', 'gemini-3.0-pro'];
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -54,13 +55,37 @@ function validateSpec(spec) {
 }
 
 /**
- * Generates a PBI visual spec using Gemini.
- * @param {string} apiKey
- * @param {string} description  - user's plain-text description of the visual
- * @param {object} designSystem - { colors: [{hex}], fonts, background, name }
- * @returns {Promise<object>} spec
+ * Try the serverless proxy first (no API key needed).
+ * Falls back to BYOK if proxy unavailable (e.g., local dev without Vercel).
  */
-export async function generateVisualSpec(apiKey, description, designSystem) {
+async function generateViaProxy(description, designSystem) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Sign in to use AI generation');
+
+  const token = await user.getIdToken();
+
+  const res = await fetch('/api/generate-visual', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ description, designSystem }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    const err = new Error(data.error || `Server error (${res.status})`);
+    err.status = res.status;
+    err.remaining = res.headers.get('X-RateLimit-Remaining');
+    throw err;
+  }
+
+  return { spec: data.spec, remaining: res.headers.get('X-RateLimit-Remaining') };
+}
+
+async function generateViaBYOK(apiKey, description, designSystem) {
   const ai = new GoogleGenAI({ apiKey });
 
   const paletteHexes = (designSystem.colors || []).slice(0, 8).map(c => c.hex);
@@ -123,9 +148,7 @@ Rules:
         ai.models.generateContent({
           model,
           contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-          },
+          config: { responseMimeType: 'application/json' },
         }),
         timeoutPromise,
       ]);
@@ -146,11 +169,7 @@ Rules:
       lastError = err;
       const status = err?.status || err?.httpStatusCode;
       const msg = (err?.message || '').toLowerCase();
-      if (status === 404 || msg.includes('not found') || msg.includes('deprecated')) {
-        console.warn(`[geminiClient] Model ${model} unavailable, trying next…`);
-        continue;
-      }
-      // Re-throw with a user-friendly message for network/timeout errors
+      if (status === 404 || msg.includes('not found') || msg.includes('deprecated')) continue;
       if (msg.includes('timed out')) throw err;
       if (msg.includes('fetch') || msg.includes('network') || msg.includes('econnrefused')) {
         throw new Error('Network error: could not reach Gemini API. Check your connection and try again.');
@@ -159,4 +178,29 @@ Rules:
     }
   }
   throw lastError ?? new Error('All Gemini models failed. Please try again later.');
+}
+
+/**
+ * Main entry point for visual generation.
+ * Tries the server proxy first (free for users, rate-limited).
+ * Falls back to BYOK if proxy is unavailable.
+ */
+export async function generateVisualSpec(byokApiKey, description, designSystem) {
+  // Try proxy first
+  try {
+    const result = await generateViaProxy(description, designSystem);
+    return result.spec;
+  } catch (err) {
+    // If it's a real user-facing error (auth, rate limit), throw it
+    if (err.status === 401 || err.status === 429) throw err;
+
+    // Proxy unavailable (local dev, network issue) — try BYOK fallback
+    if (byokApiKey) {
+      console.warn('[geminiClient] Proxy unavailable, falling back to BYOK:', err.message);
+      return generateViaBYOK(byokApiKey, description, designSystem);
+    }
+
+    // No proxy and no BYOK key
+    throw new Error('AI generation is currently unavailable. Please try again later.');
+  }
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogOut, User, Sun, Moon, Settings, ExternalLink, Key, Menu, ArrowLeft, Share2, Copy, Check, Link2 } from 'lucide-react';
+import { LogOut, User, Sun, Moon, Menu, ArrowLeft, Share2, Copy, Check, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PresenceAvatars from './PresenceAvatars';
 import { sanitizeName } from '../lib/validation';
@@ -12,8 +12,6 @@ export default function Header({
   onNameChange,
   theme,
   onToggleTheme,
-  geminiApiKey,
-  onGeminiApiKeyChange,
   currentView,
   onGoHome,
   onToggleSidebar,
@@ -22,10 +20,8 @@ export default function Header({
   projectId,
   onSave,
 }) {
-  const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
-  const settingsRef = useRef(null);
   const shareRef = useRef(null);
   const isEditor = currentView === 'editor';
   const isPrototype = currentView === 'prototype';
@@ -33,14 +29,13 @@ export default function Header({
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowSettings(false);
       if (shareRef.current && !shareRef.current.contains(e.target)) setShowShare(false);
     }
-    if (showSettings || showShare) {
+    if (showShare) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [showSettings, showShare]);
+  }, [showShare]);
 
   const shareUrl = workspaceId && projectId
     ? `${window.location.origin}?ws=${workspaceId}&project=${projectId}`
@@ -232,59 +227,6 @@ export default function Header({
                         </button>
                       </div>
                     )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* Settings gear — only show in editor */}
-        {isEditor && (
-          <div ref={settingsRef} className="relative">
-            <button
-              onClick={() => setShowSettings(prev => !prev)}
-              className={`p-2 rounded-lg transition-all duration-300 ${
-                showSettings ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-text hover:bg-surface'
-              } ${!geminiApiKey ? 'ring-2 ring-primary/40' : ''}`}
-              title="Settings"
-              aria-label="Settings"
-            >
-              <Settings size={18} />
-            </button>
-
-            <AnimatePresence>
-              {showSettings && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-80 bg-surface-light border border-surface-lighter rounded-xl shadow-2xl p-4 z-50"
-                >
-                  <h3 className="text-sm font-bold text-text flex items-center gap-2 mb-3">
-                    <Key size={14} className="text-primary" />
-                    Gemini API Key
-                  </h3>
-                  <input
-                    type="password"
-                    value={geminiApiKey}
-                    onChange={(e) => onGeminiApiKeyChange(e.target.value)}
-                    placeholder="AIza…"
-                    className="w-full bg-surface border border-surface-lighter rounded-lg px-3 py-2 text-sm outline-none focus:border-primary font-mono"
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-[10px] text-text-muted">
-                      Used only in your browser. Never sent to any server.
-                    </p>
-                    <a
-                      href="https://aistudio.google.com/app/apikey"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] text-primary hover:underline flex items-center gap-1 whitespace-nowrap"
-                    >
-                      Get free key <ExternalLink size={9} />
-                    </a>
                   </div>
                 </motion.div>
               )}

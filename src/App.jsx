@@ -27,7 +27,7 @@ import PrototypeEditor from './components/PrototypeEditor';
 import TemplateGallery from './components/TemplateGallery';
 import SaveThemeModal from './components/SaveThemeModal';
 import LoadThemeModal from './components/LoadThemeModal';
-import { Sparkles, Palette, Settings, Eye, Download, Wand2, X, Bookmark } from 'lucide-react';
+import { Sparkles, Palette, Settings, Eye, Download, X, Bookmark } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
 export default function App() {
@@ -41,7 +41,6 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [activeTab, setActiveTab] = useState('design');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
   const [showGeminiModal, setShowGeminiModal] = useState(false);
   const [showSaveTheme, setShowSaveTheme] = useState(false);
   const [showLoadTheme, setShowLoadTheme] = useState(false);
@@ -235,14 +234,6 @@ export default function App() {
           analyzing={analyzing}
           selectedId={selectedId}
           onSelect={setSelectedId}
-          visuals={state.visuals}
-          onUpdateVisual={updateVisual}
-          onRemoveVisual={removeVisual}
-          onOpenGeminiModal={handleOpenGeminiModal}
-          isPlacingVisual={isPlacingVisual}
-          onPlaceVisual={handlePlaceVisual}
-          onCancelPlace={handleCancelPlace}
-          designSystem={designSystem}
         />
 
         <div className="w-full lg:w-[400px] lg:min-w-[400px] border-l border-surface-lighter bg-surface-light flex flex-col">
@@ -251,7 +242,6 @@ export default function App() {
               { id: 'palette', label: 'Palette', Icon: Palette, badge: activePalette.length || null },
               { id: 'design',  label: 'Design',  Icon: Settings },
               { id: 'preview', label: 'Preview', Icon: Eye },
-              { id: 'ai',      label: 'AI Visuals', Icon: Wand2, badge: state.visuals.length || null },
               { id: 'export',  label: 'Export',  Icon: Download },
             ].map(({ id, label, Icon, badge }) => (
               <button
@@ -329,63 +319,6 @@ export default function App() {
             {activeTab === 'preview' && (
               <LivePreview designSystem={designSystem} />
             )}
-            {activeTab === 'ai' && (
-              <div className="space-y-4">
-                <button
-                  onClick={handleOpenGeminiModal}
-                  className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
-                >
-                  <Wand2 size={16} /> Generate Visual
-                </button>
-                {!geminiApiKey && (
-                  <p className="text-xs text-text-muted text-center">Set your Gemini API key in Settings (gear icon) first.</p>
-                )}
-                {state.visuals.length === 0 ? (
-                  <div className="text-center py-8 text-text-muted">
-                    <Wand2 size={32} className="mx-auto mb-3 opacity-30" />
-                    <p className="text-sm font-medium">No AI visuals yet</p>
-                    <p className="text-xs mt-1">Describe a chart and AI will generate it using your design system palette.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {state.visuals.map((v) => (
-                      <div
-                        key={v.id}
-                        className={`p-3 rounded-lg border transition-colors cursor-pointer ${
-                          selectedId === v.id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-surface-lighter bg-surface hover:border-primary/30'
-                        }`}
-                        onClick={() => setSelectedId(v.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-text truncate">{v.name || v.description}</p>
-                            <p className="text-xs text-text-muted capitalize">{v.spec?.visualType || 'chart'}</p>
-                          </div>
-                          <div className="flex gap-1 flex-shrink-0">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleOpenGeminiModal(); }}
-                              className="p-1.5 text-text-muted hover:text-primary rounded transition-colors"
-                              title="Regenerate"
-                            >
-                              <Wand2 size={13} />
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); removeVisual(v.id); }}
-                              className="p-1.5 text-text-muted hover:text-red-400 rounded transition-colors"
-                              title="Delete"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
             {activeTab === 'export' && (
               <ExportPanel designSystem={designSystem} visuals={state.visuals} />
             )}
@@ -424,8 +357,6 @@ export default function App() {
         onNameChange={(name) => update({ name })}
         theme={theme}
         onToggleTheme={toggleTheme}
-        geminiApiKey={geminiApiKey}
-        onGeminiApiKeyChange={setGeminiApiKey}
         currentView={currentView}
         onGoHome={handleGoHome}
         onToggleSidebar={() => setSidebarCollapsed(c => !c)}
@@ -492,7 +423,6 @@ export default function App() {
             onClose={() => setShowGeminiModal(false)}
             onGenerate={handleGeminiGenerate}
             designSystem={designSystem}
-            apiKey={geminiApiKey}
           />
         )}
         {showSaveTheme && (
