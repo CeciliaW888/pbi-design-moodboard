@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-3.1-pro', 'gemini-3.0-pro'];
 
+const VISION_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-3.1-pro'];
+
 const VALID_VISUAL_TYPES = ['bar', 'line', 'kpi', 'table', 'donut', 'area', 'scatter'];
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -138,6 +140,102 @@ Rules:
       const msg = (err?.message || '').toLowerCase();
       if (status === 404 || msg.includes('not found') || msg.includes('deprecated')) {
         console.warn(`[geminiClient] Model ${model} unavailable, trying next…`);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
+const ALLOWED_FONTS = [
+  'Segoe UI', 'Segoe UI Semibold', 'Segoe UI Light', 'Segoe UI Bold',
+  'Arial', 'Calibri', 'Cambria', 'Courier New', 'Georgia',
+  'Lucida Sans', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+  'DIN', 'Poppins', 'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat'
+];
+
+/**
+ * Analyzes a dashboard screenshot to extract a complete design system.
+ * Uses Gemini vision to identify fonts, background, layout style, and sentiment.
+ * @param {string} apiKey
+ * @param {string} imageBase64 - base64-encoded image (without data URL prefix)
+ * @param {string} mimeType - e.g. 'image/png' or 'image/jpeg'
+ * @returns {Promise<object>} { headingFont, bodyFont, background, sentiment, layoutStyle, suggestions }
+ */
+export async function analyzeDesignSystem(apiKey, imageBase64, mimeType = 'image/png') {
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `You are a Power BI dashboard design expert. Analyze this dashboard screenshot and extract the design system.
+
+Look at the typography, background colors, layout patterns, and overall visual style.
+
+Return ONLY valid JSON matching this schema (no markdown, no explanation):
+{
+  "headingFont": "<closest match from this list: ${ALLOWED_FONTS.join(', ')}>",
+  "bodyFont": "<closest match from the same list>",
+  "background": "<hex color of the page/canvas background, e.g. #ffffff or #1a1a2e>",
+  "isDarkTheme": <true if the dashboard uses a dark background, false otherwise>,
+  "sentiment": "<one of: corporate|modern|minimal|bold|elegant|playful|technical>",
+  "layoutStyle": "<one of: grid|freeform|dashboard-cards|narrative|kpi-focused>",
+  "titleSize": <estimated heading font size 12-36>,
+  "bodySize": <estimated body font size 8-14>,
+  "suggestions": "<one sentence describing the overall design approach>"
+}
+
+Rules:
+- Match fonts to the CLOSEST option in the allowed list based on visual appearance (serif vs sans-serif, weight, style)
+- For background, extract the actual page/canvas color (not a visual's background)
+- Be specific about sentiment - look at spacing, color usage, font weight
+- suggestions should describe what makes this design effective`;
+
+  const contents = [
+    {
+      role: 'user',
+      parts: [
+        { text: prompt },
+        { inlineData: { mimeType, data: imageBase64 } },
+      ],
+    },
+  ];
+
+  let lastError;
+  for (const model of VISION_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: { responseMimeType: 'application/json' },
+      });
+
+      const text = response.text;
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (match) result = JSON.parse(match[0]);
+        else throw new Error('Gemini returned invalid JSON');
+      }
+
+      // Validate and sanitize
+      return {
+        headingFont: ALLOWED_FONTS.includes(result.headingFont) ? result.headingFont : 'Segoe UI Semibold',
+        bodyFont: ALLOWED_FONTS.includes(result.bodyFont) ? result.bodyFont : 'Segoe UI',
+        background: HEX_RE.test(result.background) ? result.background : '#ffffff',
+        isDarkTheme: typeof result.isDarkTheme === 'boolean' ? result.isDarkTheme : false,
+        sentiment: sanitizeString(result.sentiment || 'corporate', 50),
+        layoutStyle: sanitizeString(result.layoutStyle || 'grid', 50),
+        titleSize: Math.min(36, Math.max(12, Number(result.titleSize) || 18)),
+        bodySize: Math.min(14, Math.max(8, Number(result.bodySize) || 10)),
+        suggestions: sanitizeString(result.suggestions || '', 300),
+      };
+    } catch (err) {
+      lastError = err;
+      const status = err?.status || err?.httpStatusCode;
+      const msg = (err?.message || '').toLowerCase();
+      if (status === 404 || msg.includes('not found') || msg.includes('deprecated')) {
+        console.warn(`[geminiClient] Vision model ${model} unavailable, trying next…`);
         continue;
       }
       throw err;

@@ -11,6 +11,7 @@ export default function ImageCard({
   onAnalyze,
   analyzing,
   zoom,
+  hasAiKey,
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -99,7 +100,7 @@ export default function ImageCard({
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm rounded-xl">
             <div className="text-center">
               <Loader2 size={28} className="mx-auto mb-2 text-white animate-spin" />
-              <p className="text-white text-xs font-medium">Extracting colors...</p>
+              <p className="text-white text-xs font-medium">{hasAiKey ? 'Analyzing design system...' : 'Extracting colors...'}</p>
             </div>
           </div>
         )}
@@ -111,10 +112,10 @@ export default function ImageCard({
               onClick={handleAnalyze}
               disabled={analyzing}
               className="px-2 py-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors disabled:opacity-50 flex items-center gap-1 text-[11px] font-medium"
-              title="Extract colors from this screenshot (set fonts manually in the Design tab)"
+              title={hasAiKey ? "AI extracts colors, fonts, background & style from this screenshot" : "Extract colors (set Gemini API key in Settings for full design system extraction)"}
             >
               {analyzing ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
-              Extract Colors
+              {hasAiKey ? 'Extract Design' : 'Extract Colors'}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(); }}

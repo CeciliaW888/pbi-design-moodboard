@@ -102,7 +102,7 @@ export default function ColorPalette({ colors, onRemove, onAdd, analysis }) {
           <DittoMascot size={48} className="mx-auto mb-3" />
           <p className="font-medium mb-1">No colors yet</p>
           <p className="text-xs max-w-[200px] mx-auto text-text-muted">
-            Select a screenshot and click "Extract Colors" to pull colors from it, or add one manually. Set fonts in the Design tab.
+            Select a screenshot and click "Extract Design" to pull colors, fonts, and style. Set a Gemini API key in Settings for full AI extraction.
           </p>
         </div>
       ) : (
