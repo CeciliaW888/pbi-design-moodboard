@@ -30,7 +30,6 @@ import PrototypeEditor from './components/PrototypeEditor';
 import TemplateGallery from './components/TemplateGallery';
 import SaveThemeModal from './components/SaveThemeModal';
 import LoadThemeModal from './components/LoadThemeModal';
-import DesignVocabulary from './components/DesignVocabulary';
 import { Sparkles, Palette, Settings, Eye, Download, Wand2, X, Bookmark } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
 
@@ -928,9 +927,6 @@ export default function App() {
           <TemplateGallery onUseTemplate={handleUseCommunityTemplate} />
         )}
         {currentView === 'projects' && renderProjectsView()}
-        {currentView === 'vocabulary' && (
-          <DesignVocabulary user={user} workspaceId={activeWorkspaceId} />
-        )}
       </div>
 
       <AnimatePresence>

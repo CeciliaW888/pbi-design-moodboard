@@ -6,7 +6,6 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Home', Icon: Home },
   { id: 'projects', label: 'Projects', Icon: FolderOpen },
   { id: 'gallery', label: 'Gallery', Icon: Compass },
-  { id: 'vocabulary', label: 'Design Vocabulary', Icon: Sparkles },
 ];
 
 export default function Sidebar({
