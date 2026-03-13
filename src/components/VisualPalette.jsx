@@ -474,7 +474,8 @@ export default function VisualPalette({
                   <button
                     onClick={onToggleReference}
                     className={`p-1 rounded transition-colors ${referenceImage.visible ? 'text-primary' : 'text-text-muted'}`}
-                    title={referenceImage.visible ? 'Hide' : 'Show'}
+                    title={referenceImage.visible ? 'Hide reference image' : 'Show reference image'}
+                    aria-label={referenceImage.visible ? 'Hide reference image' : 'Show reference image'}
                   >
                     {referenceImage.visible ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Plus, Info, AlertTriangle } from 'lucide-react';
 import DittoMascot from './DittoMascot';
 import { useState } from 'react';
+import { isValidHexColor, normalizeHexColor } from '../lib/validation';
 
 const PBI_COLOR_ROLES = [
   'Data Color 1', 'Data Color 2', 'Data Color 3', 'Data Color 4',
@@ -15,12 +16,12 @@ export default function ColorPalette({ colors, onRemove, onAdd, analysis }) {
 
   const handleAddHex = () => {
     const val = newHex.trim();
-    if (!/^#[0-9a-fA-F]{6}$/.test(val)) {
-      setHexError('Enter a valid hex e.g. #0078D4');
+    if (!isValidHexColor(val)) {
+      setHexError('Enter a valid hex e.g. #0078D4 or #07D');
       return;
     }
     setHexError('');
-    if (onAdd) onAdd(val);
+    if (onAdd) onAdd(normalizeHexColor(val));
     setShowAddHex(false);
     setNewHex('#0078D4');
   };
@@ -168,7 +169,11 @@ function ColorSlotRow({ index, color, role, isExtra, onRemove }) {
         }`}
         style={color ? { backgroundColor: color.hex } : {}}
         onClick={copyHex}
+        onKeyDown={color ? (e) => { if (e.key === 'Enter' || e.key === ' ') copyHex(); } : undefined}
+        role={color ? 'button' : undefined}
+        tabIndex={color ? 0 : undefined}
         title={color ? `${color.hex} — click to copy` : 'Empty slot'}
+        aria-label={color ? `Color ${color.hex}, click to copy` : `Empty color slot ${index + 1}`}
       />
       <div className="flex-1 min-w-0">
         <p className={`text-[11px] font-medium leading-tight ${isExtra ? 'text-orange-500' : color ? 'text-text' : 'text-text-light'}`}>
@@ -184,11 +189,11 @@ function ColorSlotRow({ index, color, role, isExtra, onRemove }) {
       </div>
       {color && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={copyHex} className="p-1 text-text-light hover:text-text-muted rounded transition-colors" title="Copy hex">
+          <button onClick={copyHex} className="p-1 text-text-light hover:text-text-muted rounded transition-colors" title="Copy hex" aria-label={`Copy color ${color?.hex}`}>
             {copied ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
           </button>
           {onRemove && (
-            <button onClick={onRemove} className="p-1 text-text-light hover:text-red-400 rounded transition-colors" title="Remove">
+            <button onClick={onRemove} className="p-1 text-text-light hover:text-red-400 rounded transition-colors" title="Remove" aria-label={`Remove color ${color?.hex}`}>
               <X size={11} />
             </button>
           )}

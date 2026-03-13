@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MoreHorizontal, Pencil, Copy, Trash2 } from 'lucide-react';
+import { sanitizeName } from '../lib/validation';
 
 export default function ProjectCard({ project, onOpen, onRename, onDuplicate, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -87,6 +88,8 @@ export default function ProjectCard({ project, onOpen, onRename, onDuplicate, on
           <button
             onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v); }}
             className="opacity-0 group-hover:opacity-100 p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-lg transition-all"
+            title="Project options"
+            aria-label="Project options"
           >
             <MoreHorizontal size={16} />
           </button>
@@ -126,7 +129,7 @@ export default function ProjectCard({ project, onOpen, onRename, onDuplicate, on
           <input
             ref={inputRef}
             value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
+            onChange={(e) => setNameValue(sanitizeName(e.target.value))}
             onBlur={handleRenameSubmit}
             onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSubmit(); if (e.key === 'Escape') { setNameValue(project.name || 'Untitled'); setRenaming(false); } }}
             onClick={(e) => e.stopPropagation()}

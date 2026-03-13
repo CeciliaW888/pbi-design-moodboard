@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Type, Paintbrush, ListChecks, Plus, X } from 'lucide-react';
+import { isValidHexColor, clampFontSize } from '../lib/validation';
 
 const PBI_FONTS = [
   'Segoe UI', 'Segoe UI Semibold', 'Segoe UI Light', 'Segoe UI Bold',
@@ -10,6 +11,8 @@ const PBI_FONTS = [
 
 export default function DesignPanel({ fonts, background, formatRules, sentinels, onUpdate }) {
   const [newRule, setNewRule] = useState('');
+  const [bgInput, setBgInput] = useState(background);
+  useEffect(() => { setBgInput(background); }, [background]);
 
   const updateFont = (key, value) => {
     onUpdate({ fonts: { ...fonts, [key]: value } });
@@ -64,7 +67,7 @@ export default function DesignPanel({ fonts, background, formatRules, sentinels,
               <input
                 type="number"
                 value={fonts.titleSize}
-                onChange={(e) => updateFont('titleSize', +e.target.value)}
+                onChange={(e) => updateFont('titleSize', clampFontSize(e.target.value, 8, 48))}
                 className="w-full bg-surface text-text border border-surface-lighter rounded-lg px-3 py-2 text-sm"
                 min={8} max={48}
               />
@@ -74,7 +77,7 @@ export default function DesignPanel({ fonts, background, formatRules, sentinels,
               <input
                 type="number"
                 value={fonts.bodySize}
-                onChange={(e) => updateFont('bodySize', +e.target.value)}
+                onChange={(e) => updateFont('bodySize', clampFontSize(e.target.value, 6, 24))}
                 className="w-full bg-surface text-text border border-surface-lighter rounded-lg px-3 py-2 text-sm"
                 min={6} max={24}
               />
@@ -98,9 +101,15 @@ export default function DesignPanel({ fonts, background, formatRules, sentinels,
           />
           <input
             type="text"
-            value={background}
-            onChange={(e) => onUpdate({ background: e.target.value })}
-            className="flex-1 bg-surface text-text border border-surface-lighter rounded-lg px-3 py-2 text-sm font-mono"
+            value={bgInput}
+            onChange={(e) => {
+              setBgInput(e.target.value);
+              if (isValidHexColor(e.target.value)) onUpdate({ background: e.target.value });
+            }}
+            onBlur={() => setBgInput(background)}
+            className={`flex-1 bg-surface text-text border rounded-lg px-3 py-2 text-sm font-mono ${
+              isValidHexColor(bgInput) ? 'border-surface-lighter' : 'border-red-400'
+            }`}
           />
         </div>
       </section>
@@ -149,7 +158,7 @@ export default function DesignPanel({ fonts, background, formatRules, sentinels,
           {formatRules.map((rule, i) => (
             <div key={i} className="flex items-center gap-2 text-sm bg-surface rounded-lg px-3 py-2">
               <span className="flex-1">{rule}</span>
-              <button onClick={() => removeRule(i)} className="text-text-muted hover:text-red-400">
+              <button onClick={() => removeRule(i)} className="text-text-muted hover:text-red-400" title="Remove rule" aria-label={`Remove rule: ${rule}`}>
                 <X size={12} />
               </button>
             </div>
@@ -167,6 +176,8 @@ export default function DesignPanel({ fonts, background, formatRules, sentinels,
               onClick={addRule}
               disabled={!newRule.trim()}
               className="px-3 py-2 bg-primary/10 text-primary text-sm rounded-lg hover:bg-primary/20 transition-colors disabled:opacity-40"
+              title="Add rule"
+              aria-label="Add format rule"
             >
               <Plus size={14} />
             </button>

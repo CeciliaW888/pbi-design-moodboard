@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Bookmark, Loader2 } from 'lucide-react';
 import { saveTheme } from '../lib/themeStorage';
+import { sanitizeName } from '../lib/validation';
 
 export default function SaveThemeModal({ designSystem, workspaceId, onClose, onSaved }) {
   const [name, setName] = useState(designSystem?.name || '');
@@ -94,8 +95,9 @@ export default function SaveThemeModal({ designSystem, workspaceId, onClose, onS
             <input
               autoFocus
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(sanitizeName(e.target.value))}
               placeholder="e.g. Client ABC Brand, Dark Minimal"
+              maxLength={100}
               className="w-full bg-surface border border-surface-lighter rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary"
               required
             />

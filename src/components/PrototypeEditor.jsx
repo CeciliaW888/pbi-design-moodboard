@@ -198,6 +198,7 @@ export default function PrototypeEditor({ state, onUpdate, selectedId, onSelect,
           disabled={!undoStack.length}
           className="p-1.5 text-text-muted hover:text-text rounded-lg transition-colors disabled:opacity-30"
           title="Undo"
+          aria-label="Undo"
         >
           <Undo2 size={16} />
         </button>
@@ -206,6 +207,7 @@ export default function PrototypeEditor({ state, onUpdate, selectedId, onSelect,
           disabled={!redoStack.length}
           className="p-1.5 text-text-muted hover:text-text rounded-lg transition-colors disabled:opacity-30"
           title="Redo"
+          aria-label="Redo"
         >
           <Redo2 size={16} />
         </button>

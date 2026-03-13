@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wand2, Loader2, Settings } from 'lucide-react';
+import { X, Wand2, Loader2 } from 'lucide-react';
 import DittoMascot from './DittoMascot';
 import { generateVisualSpec } from '../lib/geminiClient';
 
@@ -18,7 +18,6 @@ export default function GeminiPromptModal({
   onClose,
   onGenerate,
   designSystem,
-  apiKey = '',
 }) {
   const [description, setDescription] = useState('');
   const [typeOverride, setTypeOverride] = useState(null);
@@ -34,7 +33,6 @@ export default function GeminiPromptModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description.trim()) return;
-    if (!apiKey.trim()) { setError('No API key set. Configure it in Settings (gear icon in the header).'); return; }
 
     setLoading(true);
     setError('');
@@ -42,7 +40,7 @@ export default function GeminiPromptModal({
       const prompt = typeOverride
         ? `${description.trim()} (use ${typeOverride} chart type)`
         : description.trim();
-      const spec = await generateVisualSpec(apiKey.trim(), prompt, designSystem);
+      const spec = await generateVisualSpec(null, prompt, designSystem);
       onGenerate(spec, description.trim());
     } catch (err) {
       setError(err.message || 'Generation failed. Check your API key and try again.');
@@ -64,6 +62,8 @@ export default function GeminiPromptModal({
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label="Generate Visual"
         className="bg-surface-light rounded-2xl p-6 w-full max-w-md shadow-2xl border border-surface-lighter"
       >
         <div className="flex justify-between items-start mb-5">
@@ -77,6 +77,8 @@ export default function GeminiPromptModal({
           <button
             onClick={onClose}
             className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface transition-colors"
+            title="Close"
+            aria-label="Close dialog"
           >
             <X size={18} />
           </button>
@@ -121,14 +123,6 @@ export default function GeminiPromptModal({
               ))}
             </div>
           </div>
-
-          {/* API Key hint */}
-          {!apiKey && (
-            <div className="flex items-center gap-2 text-xs text-text-muted bg-surface rounded-lg px-3 py-2">
-              <Settings size={13} className="text-primary flex-shrink-0" />
-              <span>Configure your Gemini API key in <strong className="text-text">Settings</strong> (gear icon in the header)</span>
-            </div>
-          )}
 
           {error && (
             <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">{error}</p>

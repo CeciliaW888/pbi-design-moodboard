@@ -1,8 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ImageCard from './ImageCard';
-import VisualCard from './VisualCard';
-import PlaceVisualMode from './PlaceVisualMode';
 import CanvasToolbar from './CanvasToolbar';
 import { Upload, Clipboard, Monitor, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -27,15 +25,6 @@ export default function MoodboardCanvas({
   analyzing,
   selectedId,
   onSelect,
-  visuals = [],
-  onUpdateVisual,
-  onRemoveVisual,
-  onOpenGeminiModal,
-  isPlacingVisual,
-  onPlaceVisual,
-  onCancelPlace,
-  designSystem,
-  hasAiKey,
 }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -284,33 +273,9 @@ export default function MoodboardCanvas({
             onAnalyze={() => onAnalyzeScreenshot(ss)}
             analyzing={analyzing}
             zoom={zoom}
-            hasAiKey={hasAiKey}
-          />
-        ))}
-        {visuals.filter(v => v && v.id).map((v) => (
-          <VisualCard
-            key={v.id}
-            visual={v}
-            isSelected={selectedId === v.id}
-            onSelect={() => onSelect(v.id)}
-            onUpdate={(updates) => onUpdateVisual(v.id, updates)}
-            onRemove={() => onRemoveVisual(v.id)}
-            onRegenerate={() => onOpenGeminiModal?.()}
-            designSystem={designSystem}
-            zoom={zoom}
           />
         ))}
       </div>
-
-      {/* Place visual overlay */}
-      {isPlacingVisual && (
-        <PlaceVisualMode
-          pan={pan}
-          zoom={zoom}
-          onPlace={onPlaceVisual}
-          onCancel={onCancelPlace}
-        />
-      )}
 
       {/* Canvas toolbar */}
       <CanvasToolbar
@@ -343,8 +308,8 @@ export default function MoodboardCanvas({
             <h2 className="text-2xl font-bold mb-2 text-text">Design your Power BI theme</h2>
             <p className="text-sm text-text-muted mb-6">in minutes, not hours</p>
             <p className="text-text-muted mb-8 max-w-sm mx-auto">
-              Drop screenshots of dashboards you love. AI extracts your complete
-              design system — colors, fonts, and style — in one click.
+              Drop screenshots of dashboards you love. Arrange them on the canvas,
+              extract colors, and build a complete design system.
             </p>
 
             <div className="flex items-center justify-center gap-3 mb-6">
@@ -363,8 +328,8 @@ export default function MoodboardCanvas({
 
             <div className="flex flex-wrap gap-3 justify-center text-sm text-text-muted">
               <span className="px-3 py-1.5 bg-yellow-light border border-yellow/30 rounded-full text-text font-medium">📸 Drop & arrange</span>
-              <span className="px-3 py-1.5 bg-primary-light border border-primary/20 rounded-full text-text font-medium">🤖 AI extracts design system</span>
-              <span className="px-3 py-1.5 bg-surface border border-surface-lighter rounded-full text-text font-medium">🎨 Colors, fonts & style</span>
+              <span className="px-3 py-1.5 bg-primary-light border border-primary/20 rounded-full text-text font-medium">🎨 Extract colors</span>
+              <span className="px-3 py-1.5 bg-surface border border-surface-lighter rounded-full text-text font-medium">📐 Set typography</span>
               <span className="px-3 py-1.5 bg-surface border border-surface-lighter rounded-full text-text font-medium">📥 Export theme</span>
             </div>
           </div>

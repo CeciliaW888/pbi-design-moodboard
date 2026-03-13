@@ -1,19 +1,16 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { loadState, saveState, saveProjectState, setActiveProject, deleteProjectState, clearState } from './lib/storage';
-import { extractColors, analyzePalette } from './lib/colorExtractor';
-import { analyzeDesignSystem } from './lib/geminiClient';
+import { loadState, saveState, saveProjectState, setActiveProject, clearState } from './lib/storage';
+import { analyzePalette } from './lib/colorExtractor';
 import {
   auth, onAuthStateChanged, logOut,
-  saveMoodboard, getUserMoodboards, getRecentMoodboards, deleteMoodboard, renameMoodboard, duplicateMoodboard,
-  // Phase 2: workspace functions
-  createWorkspace, getUserWorkspaces, getWorkspaceProjects, saveWorkspaceProject,
-  deleteWorkspaceProject, renameWorkspaceProject, duplicateWorkspaceProject,
+  getWorkspaceProjects,
 } from './firebase';
-import { migrateUserToWorkspaces, ensurePersonalWorkspace } from './lib/migration';
 import { useRealtimeProject } from './hooks/useRealtimeProject';
 import { usePresence } from './hooks/usePresence';
 import { useDebouncedSync } from './hooks/useDebouncedSync';
+import { useProjectManager, DEFAULT_STATE } from './hooks/useProjectManager';
+import { useEditorState } from './hooks/useEditorState';
 import MoodboardCanvas from './components/MoodboardCanvas';
 import ColorPalette from './components/ColorPalette';
 import DesignPanel from './components/DesignPanel';
@@ -30,34 +27,8 @@ import PrototypeEditor from './components/PrototypeEditor';
 import TemplateGallery from './components/TemplateGallery';
 import SaveThemeModal from './components/SaveThemeModal';
 import LoadThemeModal from './components/LoadThemeModal';
-import { Sparkles, Palette, Settings, Eye, Download, Wand2, X, Bookmark } from 'lucide-react';
+import { Sparkles, Palette, Settings, Eye, Download, X, Bookmark } from 'lucide-react';
 import { useTheme } from './hooks/useTheme';
-
-const DEFAULT_STATE = {
-  screenshots: [],
-  visuals: [],
-  palette: [],
-  fonts: { heading: 'Segoe UI Semibold', body: 'Segoe UI', titleSize: 18, bodySize: 10 },
-  background: '#ffffff',
-  formatRules: [],
-  sentinels: { good: '#107C10', neutral: '#F2C811', bad: '#D83B01' },
-  name: 'My Dashboard Theme'
-};
-
-function computePosition(existingCount) {
-  const CARD_W = 380;
-  const CARD_H = 260;
-  const GAP = 30;
-  const COLS = 3;
-  const col = existingCount % COLS;
-  const row = Math.floor(existingCount / COLS);
-  return {
-    x: 40 + col * (CARD_W + GAP),
-    y: 40 + row * (CARD_H + GAP),
-    width: CARD_W,
-    height: CARD_H,
-  };
-}
 
 export default function App() {
   // --- View & navigation state ---
@@ -65,21 +36,11 @@ export default function App() {
   const [currentProjectId, setCurrentProjectId] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // --- Workspace state (Phase 2) ---
-  const [workspaces, setWorkspaces] = useState([]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
-
   // --- Editor state ---
   const [state, setState] = useState(() => loadState() || { ...DEFAULT_STATE });
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [activeTab, setActiveTab] = useState('design');
-  const [analyzing, setAnalyzing] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [savedLibrary, setSavedLibrary] = useState([]);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [isPlacingVisual, setIsPlacingVisual] = useState(false);
-  const [pendingVisualSpec, setPendingVisualSpec] = useState(null);
   const [showGeminiModal, setShowGeminiModal] = useState(false);
   const [showSaveTheme, setShowSaveTheme] = useState(false);
   const [showLoadTheme, setShowLoadTheme] = useState(false);
@@ -88,6 +49,49 @@ export default function App() {
     () => !localStorage.getItem('pbi-moodboard-visited')
   );
   const { theme, toggleTheme } = useTheme();
+
+  // --- Custom hooks ---
+  const {
+    selectedId, setSelectedId, analyzing, isPlacingVisual,
+    update, addScreenshots, updateScreenshot, analyzeScreenshot, removeScreenshot,
+    addVisual, updateVisual, removeVisual,
+    handleGeminiGenerate: onGeminiGenerate, handlePlaceVisual, handleCancelPlace,
+    removeColor, addColorManually,
+    activePalette, activePaletteLabel, designSystem,
+  } = useEditorState(state, setState);
+
+  const {
+    workspaces, activeWorkspaceId, setActiveWorkspaceId,
+    savedLibrary, setSavedLibrary,
+    initWorkspaces, clearWorkspaceState,
+    handleOpenProject, handleNewProject, handleGoToMoodboard, handleNewPrototype,
+    handleUseCommunityTemplate, handlePromptGenerate,
+    handleCreateWorkspace, handleSelectWorkspace,
+    handleRenameProject, handleDuplicateProject, handleDeleteProject,
+    handleSaveToLibrary: saveToLibrary,
+  } = useProjectManager({
+    user, setState, setSelectedId, setCurrentView, setCurrentProjectId, setShowGeminiModal,
+  });
+
+  // Wrap handleGeminiGenerate to also close the modal
+  const handleGeminiGenerate = (spec, description) => {
+    onGeminiGenerate(spec, description);
+    setShowGeminiModal(false);
+  };
+
+  // Wrap handleSaveToLibrary with current state
+  const handleSaveToLibrary = () => saveToLibrary(state, currentProjectId, setShowAuth);
+
+  // --- Navigation ---
+  const handleNavigate = (view) => setCurrentView(view);
+
+  const handleGoHome = () => {
+    setCurrentView('home');
+    setCurrentProjectId(null);
+    setActiveProject(null);
+  };
+
+  const handleOpenGeminiModal = () => setShowGeminiModal(true);
 
   // --- Phase 3: Real-time collaboration ---
   const isInEditor = currentView === 'editor' || currentView === 'prototype';
@@ -110,14 +114,11 @@ export default function App() {
   const prevProjectDataRef = useRef(null);
   useEffect(() => {
     if (!projectData || !isInEditor) return;
-    // Skip if this is the same data we already have
     if (prevProjectDataRef.current === projectData) return;
     prevProjectDataRef.current = projectData;
-    // Merge remote changes into local state (remote wins for non-screenshot fields)
     setState(prev => ({
       ...prev,
       ...projectData,
-      // Keep local screenshots (they have dataUrls that Firestore doesn't)
       screenshots: prev.screenshots,
     }));
   }, [projectData, isInEditor]);
@@ -128,7 +129,6 @@ export default function App() {
       saveState(state);
       if (currentProjectId) {
         saveProjectState(currentProjectId, state);
-        // Phase 3: debounced sync to Firestore
         if (activeWorkspaceId) {
           syncToFirestore(state);
         }
@@ -143,9 +143,7 @@ export default function App() {
       if (u) {
         await initWorkspaces(u.uid);
       } else {
-        setWorkspaces([]);
-        setActiveWorkspaceId(null);
-        setSavedLibrary([]);
+        clearWorkspaceState();
       }
     });
     return unsub;
@@ -159,520 +157,20 @@ export default function App() {
     if (wsParam && projectParam) {
       setActiveWorkspaceId(wsParam);
       setCurrentProjectId(projectParam);
-      // Try to load the project - we'll determine type after loading
       getWorkspaceProjects(wsParam).then(projects => {
         const project = projects.find(p => p.id === projectParam);
         if (project) {
           setState(prev => ({ ...prev, ...project }));
           setCurrentView(project.type === 'prototype' ? 'prototype' : 'editor');
         } else {
-          // Project exists in Firestore but not in the projects list - open as prototype
           setCurrentView('prototype');
         }
       }).catch(() => {
-        // Still open the editor - real-time listener will sync data
         setCurrentView('prototype');
       });
-      // Clean URL without reloading
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
-
-  async function initWorkspaces(uid) {
-    try {
-      // Run migration if needed
-      await migrateUserToWorkspaces(uid);
-
-      // Load workspaces
-      let ws = await getUserWorkspaces(uid);
-
-      // Ensure personal workspace exists
-      if (ws.length === 0) {
-        const personalId = await ensurePersonalWorkspace(uid, ws);
-        ws = await getUserWorkspaces(uid);
-      }
-
-      setWorkspaces(ws);
-
-      // Set active workspace to first one (personal)
-      const firstWs = ws[0];
-      if (firstWs) {
-        setActiveWorkspaceId(firstWs.id);
-        // Load projects for this workspace
-        await loadWorkspaceProjects(firstWs.id);
-      }
-    } catch (e) {
-      console.warn('[App] Workspace init failed, falling back to legacy:', e);
-      // Fallback: load from legacy path
-      try {
-        const boards = await getRecentMoodboards(uid, 20);
-        setSavedLibrary(boards);
-      } catch (e2) {
-        try {
-          const boards = await getUserMoodboards(uid);
-          setSavedLibrary(boards);
-        } catch (e3) { console.warn('Could not load library:', e3); }
-      }
-    }
-  }
-
-  async function loadWorkspaceProjects(workspaceId) {
-    try {
-      const projects = await getWorkspaceProjects(workspaceId);
-      setSavedLibrary(projects);
-    } catch (e) {
-      console.warn('[App] loadWorkspaceProjects failed:', e);
-    }
-  }
-
-  const update = useCallback((partial) => {
-    setState(prev => ({ ...prev, ...partial }));
-  }, []);
-
-  // --- Navigation ---
-  const handleNavigate = useCallback((view) => {
-    setCurrentView(view);
-  }, []);
-
-  const handleGoHome = useCallback(() => {
-    setCurrentView('home');
-    setCurrentProjectId(null);
-    setActiveProject(null);
-  }, []);
-
-  const handleOpenProject = useCallback((project) => {
-    const projectState = {
-      ...DEFAULT_STATE,
-      ...project,
-      id: project.id,
-    };
-    setState(projectState);
-    setCurrentProjectId(project.id);
-    setActiveProject(project.id);
-    setCurrentView(project.type === 'prototype' ? 'prototype' : 'editor');
-    setSelectedId(null);
-  }, []);
-
-  const handleNewProject = useCallback(() => {
-    // Go to home view where user can choose their starting path
-    setCurrentView('home');
-    setSelectedId(null);
-  }, []);
-
-  const handleGoToMoodboard = useCallback(async () => {
-    // Create new project and go to moodboard/editor
-    const newId = crypto.randomUUID();
-    const newState = { ...DEFAULT_STATE, id: newId, name: 'Untitled Project', createdAt: Date.now(), updatedAt: Date.now() };
-    setState(newState);
-    setCurrentProjectId(newId);
-    setActiveProject(newId);
-    saveProjectState(newId, newState);
-
-    if (activeWorkspaceId && user) {
-      try {
-        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
-      } catch (e) { console.warn('Could not save new project to workspace:', e); }
-    }
-
-    setCurrentView('editor');
-    setSelectedId(null);
-  }, [activeWorkspaceId, user]);
-
-  const handleNewPrototype = useCallback(async () => {
-    const newId = crypto.randomUUID();
-    const newState = {
-      ...DEFAULT_STATE,
-      id: newId,
-      name: 'Untitled Prototype',
-      type: 'prototype',
-      pageWidth: 1280,
-      pageHeight: 720,
-      gridEnabled: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    setState(newState);
-    setCurrentProjectId(newId);
-    setActiveProject(newId);
-    saveProjectState(newId, newState);
-
-    if (activeWorkspaceId && user) {
-      try {
-        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
-      } catch (e) { console.warn('Could not save new prototype to workspace:', e); }
-    }
-
-    setCurrentView('prototype');
-    setSelectedId(null);
-  }, [activeWorkspaceId, user]);
-
-  // Use a community template (receives full template object)
-  const handleUseCommunityTemplate = useCallback(async (template) => {
-    const project = {
-      ...template,
-      id: crypto.randomUUID(),
-      type: 'prototype',
-      screenshots: [],
-      visuals: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    setState(project);
-    setCurrentProjectId(project.id);
-    setActiveProject(project.id);
-    saveProjectState(project.id, project);
-
-    if (activeWorkspaceId && user) {
-      try {
-        await saveWorkspaceProject(activeWorkspaceId, project);
-      } catch (e) { console.warn('Could not save community template project:', e); }
-    }
-
-    setCurrentView('prototype');
-    setSelectedId(null);
-  }, [activeWorkspaceId, user]);
-
-  const handlePromptGenerate = useCallback(async (promptText) => {
-    const newId = crypto.randomUUID();
-    const newState = { ...DEFAULT_STATE, id: newId, name: promptText.slice(0, 40), createdAt: Date.now(), updatedAt: Date.now() };
-    setState(newState);
-    setCurrentProjectId(newId);
-    setActiveProject(newId);
-    saveProjectState(newId, newState);
-
-    if (activeWorkspaceId && user) {
-      try {
-        await saveWorkspaceProject(activeWorkspaceId, { ...newState, screenshots: [] });
-      } catch (e) { console.warn('Could not save project to workspace:', e); }
-    }
-
-    setCurrentView('editor');
-    setSelectedId(null);
-    setTimeout(() => setShowGeminiModal(true), 100);
-  }, [activeWorkspaceId, user]);
-
-  // --- Workspace management ---
-  const handleCreateWorkspace = useCallback(async (name) => {
-    if (!user) return;
-    try {
-      const id = await createWorkspace(user.uid, name);
-      const ws = await getUserWorkspaces(user.uid);
-      setWorkspaces(ws);
-      setActiveWorkspaceId(id);
-      await loadWorkspaceProjects(id);
-    } catch (e) { console.warn('Create workspace failed:', e); }
-  }, [user]);
-
-  const handleSelectWorkspace = useCallback(async (workspaceId) => {
-    setActiveWorkspaceId(workspaceId);
-    await loadWorkspaceProjects(workspaceId);
-  }, []);
-
-  // --- Project CRUD (workspace-aware) ---
-  const handleRenameProject = useCallback(async (projectId, newName) => {
-    if (activeWorkspaceId && user) {
-      try {
-        await renameWorkspaceProject(activeWorkspaceId, projectId, newName);
-        await loadWorkspaceProjects(activeWorkspaceId);
-        return;
-      } catch (e) { console.warn('Workspace rename failed, trying legacy:', e); }
-    }
-    if (user) {
-      try {
-        await renameMoodboard(user.uid, projectId, newName);
-      } catch (e) { console.warn('Rename failed:', e); }
-    }
-    setSavedLibrary(prev => prev.map(p => p.id === projectId ? { ...p, name: newName } : p));
-  }, [user, activeWorkspaceId]);
-
-  const handleDuplicateProject = useCallback(async (projectId) => {
-    if (activeWorkspaceId && user) {
-      try {
-        await duplicateWorkspaceProject(activeWorkspaceId, projectId);
-        await loadWorkspaceProjects(activeWorkspaceId);
-        return;
-      } catch (e) { console.warn('Workspace duplicate failed, trying legacy:', e); }
-    }
-    if (user) {
-      try {
-        await duplicateMoodboard(user.uid, projectId);
-        const boards = await getUserMoodboards(user.uid);
-        setSavedLibrary(boards);
-      } catch (e) { console.warn('Duplicate failed:', e); }
-    }
-  }, [user, activeWorkspaceId]);
-
-  const handleDeleteProject = useCallback(async (projectId) => {
-    if (activeWorkspaceId && user) {
-      try {
-        await deleteWorkspaceProject(activeWorkspaceId, projectId);
-        await loadWorkspaceProjects(activeWorkspaceId);
-        deleteProjectState(projectId);
-        return;
-      } catch (e) { console.warn('Workspace delete failed, trying legacy:', e); }
-    }
-    if (user) {
-      try {
-        await deleteMoodboard(user.uid, projectId);
-      } catch (e) { console.warn('Delete failed:', e); }
-    }
-    deleteProjectState(projectId);
-    setSavedLibrary(prev => prev.filter(p => p.id !== projectId));
-  }, [user, activeWorkspaceId]);
-
-  // --- Screenshot callbacks ---
-  const addScreenshots = useCallback((files) => {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setState(prev => {
-          const pos = computePosition(prev.screenshots.length);
-          return {
-            ...prev,
-            screenshots: [...prev.screenshots, {
-              id: crypto.randomUUID(),
-              dataUrl: e.target.result,
-              name: file.name,
-              addedAt: Date.now(),
-              x: pos.x,
-              y: pos.y,
-              width: pos.width,
-              height: pos.height,
-              zIndex: Date.now(),
-            }]
-          };
-        });
-      };
-      reader.onerror = () => console.error('[App] Failed to read:', file.name);
-      reader.readAsDataURL(file);
-    }
-  }, []);
-
-  const updateScreenshot = useCallback((id, updates) => {
-    setState(prev => ({
-      ...prev,
-      screenshots: prev.screenshots.map(s =>
-        s.id === id ? { ...s, ...updates } : s
-      ),
-    }));
-  }, []);
-
-  const analyzeScreenshot = useCallback(async (screenshot) => {
-    setAnalyzing(true);
-    try {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = screenshot.dataUrl;
-      });
-      const colors = extractColors(img);
-      // Store extracted palette on the screenshot itself
-      setState(prev => ({
-        ...prev,
-        screenshots: prev.screenshots.map(s =>
-          s.id === screenshot.id
-            ? { ...s, extractedPalette: deduplicateColors(colors) }
-            : s
-        ),
-      }));
-      // Auto-select this screenshot so its palette shows immediately
-      setSelectedId(screenshot.id);
-
-      // AI design system extraction (fonts, background, sentiment) when API key is available
-      if (geminiApiKey) {
-        try {
-          const dataUrl = screenshot.dataUrl;
-          const mimeMatch = dataUrl.match(/^data:(image\/\w+);base64,/);
-          if (mimeMatch) {
-            const mimeType = mimeMatch[1];
-            const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-            const designInfo = await analyzeDesignSystem(geminiApiKey, base64, mimeType);
-            setState(prev => ({
-              ...prev,
-              fonts: {
-                ...prev.fonts,
-                heading: designInfo.headingFont,
-                body: designInfo.bodyFont,
-                titleSize: designInfo.titleSize,
-                bodySize: designInfo.bodySize,
-              },
-              background: designInfo.background,
-              screenshots: prev.screenshots.map(s =>
-                s.id === screenshot.id
-                  ? { ...s, aiAnalysis: designInfo }
-                  : s
-              ),
-            }));
-          }
-        } catch (aiErr) {
-          console.warn('[App] AI design analysis failed (colors still extracted):', aiErr.message);
-        }
-      }
-    } catch (e) {
-      console.error('[App] analyzeScreenshot failed:', e);
-    } finally {
-      setAnalyzing(false);
-    }
-  }, [geminiApiKey]);
-
-  const removeScreenshot = useCallback((id) => {
-    setState(prev => ({
-      ...prev,
-      screenshots: prev.screenshots.filter(s => s.id !== id)
-    }));
-    if (selectedId === id) setSelectedId(null);
-  }, [selectedId]);
-
-  // --- Visual callbacks ---
-  const addVisual = useCallback((visual) => {
-    setState(prev => ({ ...prev, visuals: [...prev.visuals, visual] }));
-  }, []);
-
-  const updateVisual = useCallback((id, updates) => {
-    setState(prev => ({
-      ...prev,
-      visuals: prev.visuals.map(v => v.id === id ? { ...v, ...updates } : v),
-    }));
-  }, []);
-
-  const removeVisual = useCallback((id) => {
-    setState(prev => ({
-      ...prev,
-      visuals: prev.visuals.filter(v => v.id !== id),
-    }));
-    if (selectedId === id) setSelectedId(null);
-  }, [selectedId]);
-
-  // --- Gemini modal handlers ---
-  const handleOpenGeminiModal = useCallback(() => {
-    setShowGeminiModal(true);
-  }, []);
-
-  const handleGeminiGenerate = useCallback((spec, description) => {
-    setPendingVisualSpec({ spec, description });
-    setShowGeminiModal(false);
-    setIsPlacingVisual(true);
-  }, []);
-
-  const handlePlaceVisual = useCallback((canvasX, canvasY) => {
-    if (!pendingVisualSpec) return;
-    const visual = {
-      id: crypto.randomUUID(),
-      spec: pendingVisualSpec.spec,
-      description: pendingVisualSpec.description,
-      name: pendingVisualSpec.spec.title || pendingVisualSpec.description,
-      status: 'ready',
-      x: canvasX,
-      y: canvasY,
-      width: 400,
-      height: 280,
-      zIndex: Date.now(),
-    };
-    addVisual(visual);
-    setIsPlacingVisual(false);
-    setPendingVisualSpec(null);
-  }, [pendingVisualSpec, addVisual]);
-
-  const handleCancelPlace = useCallback(() => {
-    setIsPlacingVisual(false);
-    setPendingVisualSpec(null);
-  }, []);
-
-  const removeColor = useCallback((hex) => {
-    setState(prev => {
-      // If a screenshot is selected, remove from its palette
-      const selectedScreenshot = selectedId ? prev.screenshots.find(s => s.id === selectedId) : null;
-      if (selectedScreenshot?.extractedPalette) {
-        return {
-          ...prev,
-          screenshots: prev.screenshots.map(s =>
-            s.id === selectedId
-              ? { ...s, extractedPalette: s.extractedPalette.filter(c => c.hex !== hex) }
-              : s
-          ),
-        };
-      }
-      // Otherwise remove from global palette
-      return { ...prev, palette: prev.palette.filter(c => c.hex !== hex) };
-    });
-  }, [selectedId]);
-
-  const addColorManually = useCallback((hex) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const rn = r / 255, gn = g / 255, bn = b / 255;
-    const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
-    let h = 0, s = 0;
-    const l = (max + min) / 2;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
-      else if (max === gn) h = ((bn - rn) / d + 2) / 6;
-      else h = ((rn - gn) / d + 4) / 6;
-    }
-    const newColor = {
-      hex,
-      rgb: { r, g, b },
-      hsl: { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }
-    };
-    setState(prev => {
-      // If a screenshot is selected with a palette, add to it
-      const selectedScreenshot = selectedId ? prev.screenshots.find(s => s.id === selectedId) : null;
-      if (selectedScreenshot?.extractedPalette) {
-        return {
-          ...prev,
-          screenshots: prev.screenshots.map(s =>
-            s.id === selectedId
-              ? { ...s, extractedPalette: deduplicateColors([...s.extractedPalette, newColor]) }
-              : s
-          ),
-        };
-      }
-      // Otherwise add to global palette
-      return { ...prev, palette: deduplicateColors([...prev.palette, newColor]) };
-    });
-  }, [selectedId]);
-
-  const handleSaveToLibrary = async () => {
-    if (!user) { setShowAuth(true); return; }
-    try {
-      const toSave = {
-        ...state,
-        screenshots: state.screenshots.map(s => ({ ...s, dataUrl: undefined })),
-        id: currentProjectId || state.id,
-      };
-      // Save to workspace if available, otherwise legacy
-      if (activeWorkspaceId) {
-        await saveWorkspaceProject(activeWorkspaceId, toSave);
-        await loadWorkspaceProjects(activeWorkspaceId);
-      } else {
-        await saveMoodboard(user.uid, toSave);
-        const boards = await getUserMoodboards(user.uid);
-        setSavedLibrary(boards);
-      }
-    } catch (e) { console.error('Save failed:', e); }
-  };
-
-  // Determine which palette to show based on selection
-  const selectedScreenshot = selectedId ? state.screenshots.find(s => s.id === selectedId) : null;
-  const activePalette = selectedScreenshot?.extractedPalette || state.palette;
-  const activePaletteLabel = selectedScreenshot?.extractedPalette
-    ? `${selectedScreenshot.name || 'Screenshot'}`
-    : null;
-
-  const designSystem = {
-    name: state.name,
-    colors: activePalette,
-    fonts: state.fonts,
-    background: state.background,
-    formatRules: state.formatRules,
-    sentinels: state.sentinels
-  };
 
   // --- Landing page ---
   if (showLanding) {
@@ -736,15 +234,6 @@ export default function App() {
           analyzing={analyzing}
           selectedId={selectedId}
           onSelect={setSelectedId}
-          visuals={state.visuals}
-          onUpdateVisual={updateVisual}
-          onRemoveVisual={removeVisual}
-          onOpenGeminiModal={handleOpenGeminiModal}
-          isPlacingVisual={isPlacingVisual}
-          onPlaceVisual={handlePlaceVisual}
-          onCancelPlace={handleCancelPlace}
-          designSystem={designSystem}
-          hasAiKey={!!geminiApiKey}
         />
 
         <div className="w-full lg:w-[400px] lg:min-w-[400px] border-l border-surface-lighter bg-surface-light flex flex-col">
@@ -868,8 +357,6 @@ export default function App() {
         onNameChange={(name) => update({ name })}
         theme={theme}
         onToggleTheme={toggleTheme}
-        geminiApiKey={geminiApiKey}
-        onGeminiApiKeyChange={setGeminiApiKey}
         currentView={currentView}
         onGoHome={handleGoHome}
         onToggleSidebar={() => setSidebarCollapsed(c => !c)}
@@ -936,7 +423,6 @@ export default function App() {
             onClose={() => setShowGeminiModal(false)}
             onGenerate={handleGeminiGenerate}
             designSystem={designSystem}
-            apiKey={geminiApiKey}
           />
         )}
         {showSaveTheme && (
@@ -966,14 +452,4 @@ export default function App() {
       </AnimatePresence>
     </div>
   );
-}
-
-function deduplicateColors(colors) {
-  const seen = new Set();
-  return colors.filter(c => {
-    const key = `${Math.round(c.hsl.h / 15)}-${Math.round(c.hsl.s / 15)}-${Math.round(c.hsl.l / 15)}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }

@@ -132,6 +132,8 @@ export default function VisualCard({
             <button
               onClick={(e) => { e.stopPropagation(); setShowTypePicker(v => !v); }}
               className="flex items-center gap-1 px-2 py-1 bg-surface-light/90 backdrop-blur text-text text-[10px] font-medium rounded-lg shadow-md hover:bg-surface transition-colors"
+              title="Change chart type"
+              aria-label="Change chart type"
             >
               {VISUAL_TYPES.find(t => t.type === visual.spec.visualType)?.label || visual.spec.visualType}
               <ChevronDown size={10} />
@@ -162,6 +164,7 @@ export default function VisualCard({
               onClick={(e) => { e.stopPropagation(); onRegenerate(); }}
               className="p-1.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors"
               title="Regenerate visual"
+              aria-label="Regenerate visual"
             >
               <Wand2 size={14} />
             </button>
@@ -170,6 +173,7 @@ export default function VisualCard({
               onClick={(e) => { e.stopPropagation(); setEditingName(true); setNameInput(visual.name || ''); }}
               className="p-1.5 bg-surface-light text-text rounded-lg shadow-md hover:bg-surface transition-colors"
               title="Edit label"
+              aria-label="Edit label"
             >
               <Pencil size={14} />
             </button>
@@ -177,6 +181,7 @@ export default function VisualCard({
               onClick={(e) => { e.stopPropagation(); onRemove(); }}
               className="p-1.5 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-colors"
               title="Remove"
+              aria-label="Remove visual"
             >
               <X size={14} />
             </button>

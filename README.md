@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./public/Ditto.png" alt="Ditto - PBI Design Moodboard mascot" width="120" />
+
 # PBI Design Moodboard
 
 **Build beautiful Power BI themes from dashboard screenshots. No sign-up required.**

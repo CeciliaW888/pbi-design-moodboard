@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, FolderOpen, Compass, ChevronLeft, ChevronRight, Plus, Users, Check, Sparkles } from 'lucide-react';
+import { Home, FolderOpen, Compass, ChevronLeft, ChevronRight, Plus, Users, Check } from 'lucide-react';
+import { sanitizeName } from '../lib/validation';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', Icon: Home },
@@ -44,7 +45,7 @@ export default function Sidebar({
           <div className="flex items-center gap-2 min-w-0">
             <img
               src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=0078D4&color=fff&size=32`}
-              alt=""
+              alt={`${user.displayName || user.email} avatar`}
               className="w-8 h-8 rounded-full flex-shrink-0"
             />
             <div className="min-w-0">
@@ -56,7 +57,7 @@ export default function Sidebar({
         {collapsed && user && (
           <img
             src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email)}&background=0078D4&color=fff&size=32`}
-            alt=""
+            alt={`${user.displayName || user.email} avatar`}
             className="w-8 h-8 rounded-full mx-auto"
           />
         )}
@@ -67,13 +68,14 @@ export default function Sidebar({
           onClick={onToggle}
           className="p-1.5 text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors flex-shrink-0"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-0.5">
+      <nav aria-label="Main navigation" className="flex-1 p-2 space-y-0.5">
         {NAV_ITEMS.map(({ id, label, Icon }) => {
           const active = currentView === id;
           return (
@@ -106,6 +108,7 @@ export default function Sidebar({
                 onClick={() => setCreatingWorkspace(true)}
                 className="p-0.5 text-text-muted hover:text-primary transition-colors"
                 title="Create workspace"
+                aria-label="Create workspace"
               >
                 <Plus size={14} />
               </button>
@@ -152,7 +155,7 @@ export default function Sidebar({
                       <input
                         autoFocus
                         value={newWorkspaceName}
-                        onChange={(e) => setNewWorkspaceName(e.target.value)}
+                        onChange={(e) => setNewWorkspaceName(sanitizeName(e.target.value))}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleCreateSubmit();
                           if (e.key === 'Escape') { setCreatingWorkspace(false); setNewWorkspaceName(''); }
@@ -165,6 +168,8 @@ export default function Sidebar({
                         onClick={handleCreateSubmit}
                         disabled={!newWorkspaceName.trim()}
                         className="p-1 text-primary hover:bg-primary/10 rounded transition-colors disabled:opacity-30"
+                        title="Confirm"
+                        aria-label="Confirm create workspace"
                       >
                         <Check size={14} />
                       </button>
@@ -179,6 +184,7 @@ export default function Sidebar({
           <button
             className="w-full flex justify-center p-2.5 text-text-muted hover:text-text hover:bg-surface rounded-lg transition-colors"
             title="Workspaces"
+            aria-label="Workspaces"
           >
             <Users size={18} />
           </button>
