@@ -18,6 +18,7 @@ const TOAST_TYPES = {
 
 export default function MoodboardCanvas({
   screenshots,
+  visuals = [],
   onAddScreenshots,
   onUpdateScreenshot,
   onRemoveScreenshot,

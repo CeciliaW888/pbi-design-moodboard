@@ -227,6 +227,7 @@ export default function App() {
       <main className="moodboard-editor flex-1 flex flex-col lg:flex-row gap-0 min-h-0">
         <MoodboardCanvas
           screenshots={state.screenshots}
+          visuals={state.visuals}
           onAddScreenshots={addScreenshots}
           onUpdateScreenshot={updateScreenshot}
           onRemoveScreenshot={removeScreenshot}
